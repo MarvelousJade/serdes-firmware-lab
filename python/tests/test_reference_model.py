@@ -32,10 +32,10 @@ class ReferenceModelTests(unittest.TestCase):
 
     def test_rule_of_three(self) -> None:
         self.assertAlmostEqual(zero_error_ber_upper_bound_95(1_000_000), 3e-6)
+        self.assertEqual(zero_error_ber_upper_bound_95(1), 1.0)
         with self.assertRaises(ValueError):
             zero_error_ber_upper_bound_95(0)
 
 
 if __name__ == "__main__":
     unittest.main()
-

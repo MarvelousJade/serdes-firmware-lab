@@ -42,6 +42,8 @@ std::string_view to_string(const FaultReason reason) noexcept {
         return "pll_timeout";
     case FaultReason::MeasurementFault:
         return "measurement_fault";
+    case FaultReason::TrainingNotConverged:
+        return "training_not_converged";
     case FaultReason::BerTargetMissed:
         return "ber_target_missed";
     }
@@ -109,6 +111,7 @@ BringupReport FirmwareController::bring_up(const std::uint32_t seed) {
     transition(LinkState::DfeTraining, &report);
     phy_.restart_pattern(seed ^ 0x2468'ACE1U);
     std::uint32_t stable_windows = 0U;
+    bool training_converged = false;
     for (std::uint32_t window = 0U; window < config_.max_training_windows; ++window) {
         const auto measurement =
             phy_.measure(config_.training_symbols_per_window, true);
@@ -135,8 +138,15 @@ BringupReport FirmwareController::bring_up(const std::uint32_t seed) {
 
         stable_windows = changed ? 0U : stable_windows + 1U;
         if (stable_windows >= config_.stable_training_windows) {
+            training_converged = true;
             break;
         }
+    }
+
+    if (!training_converged) {
+        report.fault = FaultReason::TrainingNotConverged;
+        transition(LinkState::Fault, &report);
+        return report;
     }
 
     report.trained_dfe_taps = phy_.dfe_tap_codes();
@@ -149,7 +159,7 @@ BringupReport FirmwareController::bring_up(const std::uint32_t seed) {
         return report;
     }
 
-    if (report.trained.ber() > config_.maximum_ber) {
+    if (ber_upper_bound_95(report.trained) > config_.maximum_ber) {
         report.fault = FaultReason::BerTargetMissed;
         transition(LinkState::Fault, &report);
         return report;
@@ -160,11 +170,16 @@ BringupReport FirmwareController::bring_up(const std::uint32_t seed) {
     return report;
 }
 
-HealthAction FirmwareController::monitor_once(
+HealthAction FirmwareController::run_offline_bert_health_check(
     const std::uint32_t symbols,
     const std::uint32_t seed) {
     if (state_ != LinkState::LinkUp) {
         return HealthAction::NotLinkUp;
+    }
+
+    if (!phy_.pll_locked()) {
+        transition(LinkState::Fault);
+        return HealthAction::RetrainRequired;
     }
 
     phy_.restart_pattern(seed);
@@ -174,7 +189,7 @@ HealthAction FirmwareController::monitor_once(
         return HealthAction::RetrainRequired;
     }
 
-    if (last_health_measurement_.ber() <= config_.maximum_ber) {
+    if (ber_upper_bound_95(last_health_measurement_) <= config_.maximum_ber) {
         degraded_window_count_ = 0U;
         return HealthAction::Healthy;
     }
@@ -213,4 +228,3 @@ int FirmwareController::adaptation_step(const double normalized_correlation) noe
 }
 
 }  // namespace serdes
-

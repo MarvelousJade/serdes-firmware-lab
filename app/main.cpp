@@ -60,15 +60,6 @@ void print_usage(const char* const program) {
                  " [--verify-symbols N] [--json]\n";
 }
 
-[[nodiscard]] double zero_error_upper_bound(const serdes::Measurement& measurement) {
-    if (measurement.symbols == 0U) {
-        return 1.0;
-    }
-    return measurement.errors == 0U
-               ? 3.0 / static_cast<double>(measurement.symbols)
-               : measurement.ber();
-}
-
 void print_json(
     const Arguments& args,
     const serdes::BringupReport& report) {
@@ -83,7 +74,7 @@ void print_json(
               << ",\"trained_errors\":" << report.trained.errors
               << ",\"trained_symbols\":" << report.trained.symbols
               << ",\"trained_ber\":" << report.trained.ber()
-              << ",\"trained_ber_95_upper\":" << zero_error_upper_bound(report.trained)
+              << ",\"trained_ber_95_upper\":" << serdes::ber_upper_bound_95(report.trained)
               << ",\"ctle_code\":" << static_cast<int>(report.selected_ctle_code)
               << ",\"dfe_tap_codes\":[";
     for (std::size_t tap = 0; tap < report.trained_dfe_taps.size(); ++tap) {
@@ -119,10 +110,8 @@ void print_human(const Arguments& args, const serdes::BringupReport& report) {
               << report.baseline.errors << '/' << report.baseline.symbols << ")\n"
               << "Trained BER:  " << report.trained.ber() << " ("
               << report.trained.errors << '/' << report.trained.symbols << ")\n";
-    if (report.trained.errors == 0U && report.trained.symbols != 0U) {
-        std::cout << "95% BER upper bound after zero observed errors: "
-                  << zero_error_upper_bound(report.trained) << '\n';
-    }
+    std::cout << "Approximate one-sided 95% BER upper estimate: "
+              << serdes::ber_upper_bound_95(report.trained) << '\n';
     std::cout << "CTLE code: " << static_cast<int>(report.selected_ctle_code) << '\n'
               << "DFE tap codes: ["
               << static_cast<int>(report.trained_dfe_taps[0]) << ", "
@@ -167,4 +156,3 @@ int main(const int argc, char** argv) {
     }
     return report.success ? 0 : 2;
 }
-

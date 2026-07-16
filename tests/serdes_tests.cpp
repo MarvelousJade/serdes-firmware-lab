@@ -4,6 +4,7 @@
 #include "serdes/simulated_phy.hpp"
 
 #include <cstdint>
+#include <cmath>
 #include <iostream>
 #include <string_view>
 
@@ -34,6 +35,17 @@ private:
 };
 
 #define CHECK(suite, expression) (suite).check((expression), #expression, __LINE__)
+
+class NeverCompleteIo final : public serdes::IRegisterIo {
+public:
+    [[nodiscard]] std::uint32_t read32(const serdes::Register address) const override {
+        return address == serdes::Register::Status ? serdes::status_bits::kPllLocked : 0U;
+    }
+    void write32(serdes::Register, std::uint32_t) override {}
+    void tick() override { ++ticks; }
+
+    std::uint32_t ticks{0};
+};
 
 void test_prbs31_signature(TestSuite& suite) {
     serdes::Prbs31 prbs{};
@@ -66,6 +78,30 @@ void test_register_encoding_and_clamping(TestSuite& suite) {
     CHECK(suite, phy.dfe_tap_code(0U) == -17);
     CHECK(suite, phy.dfe_tap_code(1U) == serdes::kMaxDfeTapCode);
     CHECK(suite, phy.dfe_tap_code(2U) == serdes::kMinDfeTapCode);
+}
+
+void test_measurement_timeout(TestSuite& suite) {
+    NeverCompleteIo io{};
+    serdes::PhyDriver phy{io};
+    const auto measurement = phy.measure(1'024U, true);
+    CHECK(suite, !measurement.valid);
+    CHECK(suite, io.ticks == 8U);
+}
+
+void test_ber_upper_estimate(TestSuite& suite) {
+    serdes::Measurement zero_errors{};
+    zero_errors.symbols = 500'000U;
+    zero_errors.valid = true;
+    CHECK(suite, std::abs(serdes::ber_upper_bound_95(zero_errors) - 6.0e-6) < 1.0e-12);
+    zero_errors.symbols = 1U;
+    CHECK(suite, serdes::ber_upper_bound_95(zero_errors) == 1.0);
+
+    serdes::Measurement observed_errors{};
+    observed_errors.errors = 13U;
+    observed_errors.symbols = 500'000U;
+    observed_errors.valid = true;
+    CHECK(suite, serdes::ber_upper_bound_95(observed_errors) > observed_errors.ber());
+    CHECK(suite, serdes::ber_upper_bound_95(observed_errors) < 5.0e-5);
 }
 
 void test_bringup(TestSuite& suite, const std::string_view profile_name) {
@@ -110,6 +146,21 @@ void test_pll_timeout(TestSuite& suite) {
     CHECK(suite, firmware.state() == serdes::LinkState::Fault);
 }
 
+void test_training_exhaustion(TestSuite& suite) {
+    const auto profile = *serdes::find_channel_profile("medium");
+    serdes::SimulatedPhy model{profile};
+    serdes::PhyDriver phy{model};
+    serdes::FirmwareConfig config{};
+    config.max_training_windows = 1U;
+    config.stable_training_windows = 3U;
+    serdes::FirmwareController firmware{phy, config};
+    const auto report = firmware.bring_up(17U);
+
+    CHECK(suite, !report.success);
+    CHECK(suite, report.fault == serdes::FaultReason::TrainingNotConverged);
+    CHECK(suite, firmware.state() == serdes::LinkState::Fault);
+}
+
 void test_degradation_hysteresis(TestSuite& suite) {
     const auto short_profile = *serdes::find_channel_profile("short");
     serdes::SimulatedPhy model{short_profile};
@@ -126,9 +177,12 @@ void test_degradation_hysteresis(TestSuite& suite) {
     degraded.noise_sigma = 0.28;
     model.set_channel_profile(degraded);
 
-    CHECK(suite, firmware.monitor_once(30'000U, 100U) == serdes::HealthAction::Observe);
-    CHECK(suite, firmware.monitor_once(30'000U, 101U) == serdes::HealthAction::Observe);
-    CHECK(suite, firmware.monitor_once(30'000U, 102U) == serdes::HealthAction::RetrainRequired);
+    CHECK(suite, firmware.run_offline_bert_health_check(30'000U, 100U) ==
+                     serdes::HealthAction::Observe);
+    CHECK(suite, firmware.run_offline_bert_health_check(30'000U, 101U) ==
+                     serdes::HealthAction::Observe);
+    CHECK(suite, firmware.run_offline_bert_health_check(30'000U, 102U) ==
+                     serdes::HealthAction::RetrainRequired);
     CHECK(suite, firmware.state() == serdes::LinkState::Degraded);
 }
 
@@ -138,10 +192,13 @@ int main() {
     TestSuite suite{};
     test_prbs31_signature(suite);
     test_register_encoding_and_clamping(suite);
+    test_measurement_timeout(suite);
+    test_ber_upper_estimate(suite);
     test_bringup(suite, "short");
     test_bringup(suite, "medium");
     test_bringup(suite, "long");
     test_pll_timeout(suite);
+    test_training_exhaustion(suite);
     test_degradation_hysteresis(suite);
     return suite.finish();
 }

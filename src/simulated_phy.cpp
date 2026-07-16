@@ -6,6 +6,7 @@
 #include <cmath>
 #include <cstdint>
 #include <limits>
+#include <numbers>
 
 namespace serdes {
 namespace {
@@ -174,6 +175,8 @@ void SimulatedPhy::restart_pattern(const std::uint32_t seed) {
     if (noise_state_ == 0U) {
         noise_state_ = 0xE703'7ED1'A0B4'28DBULL;
     }
+    spare_gaussian_noise_ = 0.0;
+    has_spare_gaussian_noise_ = false;
     symbol_history_.fill(0.0);
     feedback_history_.fill(0.0);
     previous_raw_sample_ = 0.0;
@@ -261,11 +264,18 @@ SimulatedPhy::SymbolObservation SimulatedPhy::step_symbol(const bool training_mo
 }
 
 double SimulatedPhy::gaussian_noise() noexcept {
-    double sum = 0.0;
-    for (int sample = 0; sample < 12; ++sample) {
-        sum += uniform01();
+    if (has_spare_gaussian_noise_) {
+        has_spare_gaussian_noise_ = false;
+        return spare_gaussian_noise_;
     }
-    return sum - 6.0;
+
+    const double first_uniform = std::max(uniform01(), std::numeric_limits<double>::min());
+    const double second_uniform = uniform01();
+    const double radius = std::sqrt(-2.0 * std::log(first_uniform));
+    const double angle = 2.0 * std::numbers::pi * second_uniform;
+    spare_gaussian_noise_ = radius * std::sin(angle);
+    has_spare_gaussian_noise_ = true;
+    return radius * std::cos(angle);
 }
 
 double SimulatedPhy::uniform01() noexcept {
@@ -288,4 +298,3 @@ std::int8_t SimulatedPhy::clamp_tap_code(const int value) noexcept {
 }
 
 }  // namespace serdes
-

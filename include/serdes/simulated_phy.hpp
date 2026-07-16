@@ -41,6 +41,8 @@ private:
     ChannelProfile profile_;
     Prbs31 prbs_;
     std::uint64_t noise_state_{0xA076'1D64'78BD'642FULL};
+    double spare_gaussian_noise_{0.0};
+    bool has_spare_gaussian_noise_{false};
 
     std::array<double, 4> symbol_history_{};
     std::array<double, kDfeTapCount> feedback_history_{};
@@ -59,4 +61,3 @@ private:
 };
 
 }  // namespace serdes
-

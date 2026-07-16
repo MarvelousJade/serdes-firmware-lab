@@ -26,6 +26,7 @@ enum class FaultReason : std::uint8_t {
     None,
     PllTimeout,
     MeasurementFault,
+    TrainingNotConverged,
     BerTargetMissed,
 };
 
@@ -70,7 +71,9 @@ public:
     explicit FirmwareController(PhyDriver& phy, FirmwareConfig config = {});
 
     [[nodiscard]] BringupReport bring_up(std::uint32_t seed);
-    [[nodiscard]] HealthAction monitor_once(std::uint32_t symbols, std::uint32_t seed);
+    [[nodiscard]] HealthAction run_offline_bert_health_check(
+        std::uint32_t symbols,
+        std::uint32_t seed);
     [[nodiscard]] LinkState state() const noexcept { return state_; }
     [[nodiscard]] const Measurement& last_health_measurement() const noexcept {
         return last_health_measurement_;
@@ -89,4 +92,3 @@ private:
 };
 
 }  // namespace serdes
-

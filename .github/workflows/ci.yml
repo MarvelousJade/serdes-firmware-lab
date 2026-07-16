@@ -21,4 +21,12 @@ jobs:
         run: cmake --build build --config Release
       - name: Test
         run: ctest --test-dir build -C Release --output-on-failure
-
+      - name: Configure sanitizers
+        if: runner.os == 'Linux'
+        run: cmake -S . -B build-sanitize -DCMAKE_BUILD_TYPE=Debug -DSERDES_ENABLE_SANITIZERS=ON
+      - name: Build sanitizers
+        if: runner.os == 'Linux'
+        run: cmake --build build-sanitize
+      - name: Test sanitizers
+        if: runner.os == 'Linux'
+        run: ctest --test-dir build-sanitize --output-on-failure

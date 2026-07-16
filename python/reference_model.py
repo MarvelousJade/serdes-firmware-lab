@@ -50,5 +50,4 @@ def zero_error_ber_upper_bound_95(symbols: int) -> float:
     """Rule-of-three upper bound after observing zero errors."""
     if symbols <= 0:
         raise ValueError("symbols must be positive")
-    return 3.0 / symbols
-
+    return min(1.0, 3.0 / symbols)

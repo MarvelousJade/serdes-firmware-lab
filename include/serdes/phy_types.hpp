@@ -25,6 +25,9 @@ struct Measurement {
     }
 };
 
+// Rule-of-three for zero errors; one-sided 95% Wilson estimate otherwise.
+[[nodiscard]] double ber_upper_bound_95(const Measurement& measurement) noexcept;
+
 struct ChannelProfile {
     std::string_view name;
     std::array<double, 4> impulse_response;
@@ -36,4 +39,3 @@ struct ChannelProfile {
 [[nodiscard]] std::optional<ChannelProfile> find_channel_profile(std::string_view name);
 
 }  // namespace serdes
-

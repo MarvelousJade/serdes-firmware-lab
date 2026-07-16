@@ -78,16 +78,18 @@ def write_csv(path: pathlib.Path, rows: list[dict]) -> None:
 
 def write_summary(path: pathlib.Path, rows: list[dict]) -> None:
     passed = sum(bool(row["success"]) for row in rows)
+    zero_error_windows = sum(row["trained_errors"] == 0 for row in rows)
     baseline = statistics.median(row["baseline_ber"] for row in rows)
-    conservative_trained = statistics.median(row["trained_ber_95_upper"] for row in rows)
-    improvement = baseline / conservative_trained if conservative_trained > 0 else float("inf")
+    maximum_trained = max(row["trained_ber"] for row in rows)
+    maximum_upper = max(row["trained_ber_95_upper"] for row in rows)
     worst_tap_error = max(row["max_tap_code_error"] for row in rows)
     content = (
         "# Regression summary\n\n"
         f"- Passing scenarios: {passed}/{len(rows)} ({passed / len(rows):.1%})\n"
+        f"- Trained windows with zero observed errors: {zero_error_windows}/{len(rows)}\n"
         f"- Median baseline BER: {baseline:.3e}\n"
-        f"- Median trained BER, conservative value: {conservative_trained:.3e}\n"
-        f"- Conservative median improvement: {improvement:.1f}x\n"
+        f"- Worst observed trained BER: {maximum_trained:.3e}\n"
+        f"- Worst approximate one-sided 95% BER upper estimate: {maximum_upper:.3e}\n"
         f"- Worst learned-to-reference tap-code difference: {worst_tap_error}\n"
         f"- Symbols checked per baseline/trained window: {rows[0]['trained_symbols']:,}\n"
     )
@@ -117,4 +119,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-
