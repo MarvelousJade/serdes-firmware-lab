@@ -1,0 +1,9 @@
+/build/
+/build-*/
+/artifacts/
+__pycache__/
+*.py[cod]
+.venv/
+.idea/
+.vscode/
+
