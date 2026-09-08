@@ -30,19 +30,19 @@ private:
     };
 
     void reset_model();
-    void restart_pattern(std::uint32_t seed);
-    void run_measurement(bool training_mode);
-    [[nodiscard]] SymbolObservation step_symbol(bool training_mode);
-    [[nodiscard]] double gaussian_noise() noexcept;
-    [[nodiscard]] double uniform01() noexcept;
-    [[nodiscard]] static double ctle_feedback(std::uint8_t code) noexcept;
+    void restart_test_sequence(std::uint32_t seed);
+    void run_measurement(bool use_known_symbols);
+    [[nodiscard]] SymbolObservation step_symbol(bool use_known_symbols);
+    [[nodiscard]] double next_gaussian_sample() noexcept;
+    [[nodiscard]] double next_uniform_sample() noexcept;
+    [[nodiscard]] static double ctle_coefficient(std::uint8_t code) noexcept;
     [[nodiscard]] static std::int8_t clamp_tap_code(int value) noexcept;
 
     ChannelProfile profile_;
     Prbs31 prbs_;
-    std::uint64_t noise_state_{0xA076'1D64'78BD'642FULL};
-    double spare_gaussian_noise_{0.0};
-    bool has_spare_gaussian_noise_{false};
+    std::uint64_t noise_state_{1U};
+    double cached_noise_sample_{0.0};
+    bool has_cached_noise_sample_{false};
 
     std::array<double, 4> symbol_history_{};
     std::array<double, kDfeTapCount> feedback_history_{};

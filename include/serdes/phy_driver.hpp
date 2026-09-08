@@ -14,9 +14,10 @@ public:
 
     void reset();
     void tick();
-    [[nodiscard]] bool pll_locked() const;
+    [[nodiscard]] bool is_pll_locked() const;
 
-    void restart_pattern(std::uint32_t seed);
+    // Restart generated data, noise, and channel history for a repeatable measurement.
+    void restart_test_sequence(std::uint32_t seed);
     void set_ctle_code(std::uint8_t code);
     [[nodiscard]] std::uint8_t ctle_code() const;
 
@@ -25,7 +26,7 @@ public:
     void clear_dfe_taps();
     [[nodiscard]] DfeTapCodes dfe_tap_codes() const;
 
-    [[nodiscard]] Measurement measure(std::uint32_t symbols, bool training_mode);
+    [[nodiscard]] Measurement measure(std::uint32_t symbols, MeasurementMode mode);
 
 private:
     IRegisterIo& io_;

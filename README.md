@@ -16,19 +16,19 @@ The controller waits for PLL lock, sweeps CTLE settings, trains a three-tap DFE,
 - Hardware-abstraction layer designed for replaceable MMIO, SPI, or mailbox backends
 - Fixed-width registers, signed tap encoding, saturation, and deterministic seeded replay
 - PRBS31 traffic, synthetic channel/noise profiles, CTLE sweep, DFE adaptation, and BER estimation
-- Cross-platform CI, 50 C++ checks, Python reference tests, and multi-seed regression
+- Cross-platform CI, 104 C++ checks, Python reference tests, and multi-seed regression
 
 ## Measured results
 
-The checked-in regression covers 75 deterministic runs across three synthetic channels and 25 seeds, using 500,000-symbol baseline and trained verification windows.
+The [2026-09-08 regression data](docs/evidence/2026-09-08-seed-cleanup.csv) covers 75 deterministic runs across three synthetic channels and 25 seeds, using 500,000-symbol baseline and trained verification windows.
 
 | Channel | Passing runs | Median baseline BER | Maximum trained BER | Maximum tap error |
 |---|---:|---:|---:|---:|
 | Short | 25/25 | 0 observed | 0 observed | 0 codes |
-| Medium | 25/25 | `9.168e-2` | 0 observed | 0 codes |
-| Long | 25/25 | `2.000e-1` | `3.600e-5` | 1 code |
+| Medium | 25/25 | `9.147e-02` | 0 observed | 0 codes |
+| Long | 25/25 | `2.001e-01` | `5.000e-05` | 1 code |
 
-All 75 runs met the configured `1e-3` BER acceptance target. The worst approximate one-sided 95% upper estimate was `5.292e-5`; zero-error windows use the rule-of-three estimate rather than claiming true BER is zero. See [the validation record](docs/validation.md) for the full methodology and limitations.
+All 75 runs met the configured `1e-3` BER acceptance target. The worst approximate one-sided 95% upper estimate was `6.937e-5`; zero-error windows use the rule-of-three estimate rather than claiming true BER is zero. See [the validation record](docs/validation.md) for the full methodology and limitations.
 
 ## Design
 
@@ -52,6 +52,8 @@ RESET -> WAIT_FOR_PLL -> CTLE_SWEEP -> DFE_TRAINING -> VERIFY -> LINK_UP
 ```
 
 Firmware consumes block-level counters and correlations; the simulated PHY owns symbol processing. This keeps the controller realistic about the firmware/hardware boundary. See [architecture](docs/architecture.md) and the [register map](docs/register-map.md) for details.
+
+The [cleanup notes](docs/cleanup-2026-09-08.md) explain the clearer names, measurement modes, and direct noise seed. The earlier validation results remain recorded separately.
 
 ## Build and run
 

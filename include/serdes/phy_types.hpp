@@ -12,6 +12,11 @@ namespace serdes {
 
 using DfeTapCodes = std::array<std::int8_t, kDfeTapCount>;
 
+enum class MeasurementMode {
+    Training,      // Feed back the known transmitted symbols.
+    Verification,  // Feed back the receiver's own decisions.
+};
+
 struct Measurement {
     std::uint32_t errors{0};
     std::uint32_t symbols{0};
@@ -31,7 +36,7 @@ struct Measurement {
 struct ChannelProfile {
     std::string_view name;
     std::array<double, 4> impulse_response;
-    double noise_sigma;
+    double noise_sigma;  // Standard deviation: how strongly noise varies around zero.
     std::uint32_t pll_lock_delay_ticks;
     bool force_pll_fault{false};
 };

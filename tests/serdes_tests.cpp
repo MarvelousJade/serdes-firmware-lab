@@ -3,8 +3,9 @@
 #include "serdes/prbs31.hpp"
 #include "serdes/simulated_phy.hpp"
 
-#include <cstdint>
+#include <array>
 #include <cmath>
+#include <cstdint>
 #include <iostream>
 #include <string_view>
 
@@ -83,9 +84,49 @@ void test_register_encoding_and_clamping(TestSuite& suite) {
 void test_measurement_timeout(TestSuite& suite) {
     NeverCompleteIo io{};
     serdes::PhyDriver phy{io};
-    const auto measurement = phy.measure(1'024U, true);
+    const auto measurement = phy.measure(1'024U, serdes::MeasurementMode::Training);
     CHECK(suite, !measurement.valid);
     CHECK(suite, io.ticks == 8U);
+}
+
+bool same_measurement(const serdes::Measurement& first, const serdes::Measurement& second) {
+    return first.valid == second.valid && first.errors == second.errors &&
+           first.symbols == second.symbols &&
+           first.mean_squared_error == second.mean_squared_error &&
+           first.mean_margin == second.mean_margin &&
+           first.error_correlations == second.error_correlations;
+}
+
+void test_sequence_replay(TestSuite& suite) {
+    constexpr std::array<std::uint32_t, 4> seeds{0U, 1U, 42U, 0xFFFF'FFFFU};
+    for (const auto profile_name : {"short", "medium", "long"}) {
+        serdes::SimulatedPhy model{*serdes::find_channel_profile(profile_name)};
+        serdes::PhyDriver phy{model};
+        phy.reset();
+        for (std::uint32_t tick = 0; tick < model.channel_profile().pll_lock_delay_ticks; ++tick) {
+            phy.tick();
+        }
+
+        for (const auto mode : {serdes::MeasurementMode::Training,
+                               serdes::MeasurementMode::Verification}) {
+            for (const auto seed : seeds) {
+                // An odd window leaves a cached noise sample, which restart must discard.
+                phy.restart_test_sequence(seed);
+                const auto first = phy.measure(1'025U, mode);
+                phy.restart_test_sequence(seed);
+                const auto repeated = phy.measure(1'025U, mode);
+                CHECK(suite, first.valid && repeated.valid &&
+                                 std::isfinite(first.mean_squared_error) &&
+                                 std::isfinite(first.mean_margin));
+                CHECK(suite, same_measurement(first, repeated));
+
+                if (seed == 0U) {
+                    phy.restart_test_sequence(serdes::Prbs31::kDefaultSeed);
+                    CHECK(suite, same_measurement(first, phy.measure(1'025U, mode)));
+                }
+            }
+        }
+    }
 }
 
 void test_ber_upper_estimate(TestSuite& suite) {
@@ -177,11 +218,11 @@ void test_degradation_hysteresis(TestSuite& suite) {
     degraded.noise_sigma = 0.28;
     model.set_channel_profile(degraded);
 
-    CHECK(suite, firmware.run_offline_bert_health_check(30'000U, 100U) ==
+    CHECK(suite, firmware.check_link_health(30'000U, 100U) ==
                      serdes::HealthAction::Observe);
-    CHECK(suite, firmware.run_offline_bert_health_check(30'000U, 101U) ==
+    CHECK(suite, firmware.check_link_health(30'000U, 101U) ==
                      serdes::HealthAction::Observe);
-    CHECK(suite, firmware.run_offline_bert_health_check(30'000U, 102U) ==
+    CHECK(suite, firmware.check_link_health(30'000U, 102U) ==
                      serdes::HealthAction::RetrainRequired);
     CHECK(suite, firmware.state() == serdes::LinkState::Degraded);
 }
@@ -193,6 +234,7 @@ int main() {
     test_prbs31_signature(suite);
     test_register_encoding_and_clamping(suite);
     test_measurement_timeout(suite);
+    test_sequence_replay(suite);
     test_ber_upper_estimate(suite);
     test_bringup(suite, "short");
     test_bringup(suite, "medium");

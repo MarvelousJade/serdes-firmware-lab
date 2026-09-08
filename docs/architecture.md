@@ -55,6 +55,12 @@ Every measurement uses a bounded symbol count and returns an explicit validity f
 
 ## Determinism
 
-PRBS, channel history, and noise state restart from the programmed pattern seed. Noise uses a local xorshift generator and a Box–Muller transform. This is sufficient for reproducible functional regression but is not a calibrated statistical communications or compliance simulator.
+The pseudorandom binary sequence (PRBS), channel history, and noise state restart together in `restart_test_sequence()`. The noise generator starts directly from the nonzero seed. Named seed masks give each controller stage a repeatable starting point, and all candidates in a continuous-time linear equalizer (CTLE) sweep replay the same sequence. Noise uses a local xorshift generator and a Box–Muller transform. This is sufficient for reproducible functional regression but is not a calibrated statistical communications or compliance simulator.
 
 The controller stores its state trace in a fixed-size array. The register path uses fixed-width integers and saturating codes. CMake separates `serdes_firmware_core` from `serdes_behavioral_model`, but the controller still uses floating-point host metrics and a virtual I/O interface. The project should therefore be described as embedded-style host prototype firmware rather than deployable bare-metal firmware.
+
+## Reading the control code
+
+`wait_for_pll_lock()` waits for the phase-locked loop (PLL) readiness flag with a bounded tick budget. `measure(..., MeasurementMode::Training)` uses known transmitted symbols as feedback; `MeasurementMode::Verification` uses the receiver's own decisions. `dfe_tap_step()` chooses how far to adjust a decision-feedback equalizer (DFE) tap. `check_link_health()` runs an offline test-pattern measurement, not a live-traffic monitor.
+
+`next_uniform_sample()` generates a value in [0, 1). `next_gaussian_sample()` converts pairs of those values into bell-shaped noise and caches the second sample. Both the seed and that cache are reset before replay. See the [cleanup notes](cleanup-2026-09-08.md) for the old-to-new name mapping.

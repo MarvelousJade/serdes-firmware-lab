@@ -26,11 +26,11 @@ void PhyDriver::tick() {
     io_.tick();
 }
 
-bool PhyDriver::pll_locked() const {
+bool PhyDriver::is_pll_locked() const {
     return (io_.read32(Register::Status) & status_bits::kPllLocked) != 0U;
 }
 
-void PhyDriver::restart_pattern(const std::uint32_t seed) {
+void PhyDriver::restart_test_sequence(const std::uint32_t seed) {
     io_.write32(Register::PatternSeed, seed & Prbs31::kMask);
 }
 
@@ -75,10 +75,10 @@ DfeTapCodes PhyDriver::dfe_tap_codes() const {
     return result;
 }
 
-Measurement PhyDriver::measure(const std::uint32_t symbols, const bool training_mode) {
+Measurement PhyDriver::measure(const std::uint32_t symbols, const MeasurementMode mode) {
     io_.write32(Register::MeasureSymbols, symbols);
     const auto command = measure_bits::kStart |
-                         (training_mode ? measure_bits::kTrainingMode : 0U);
+                         (mode == MeasurementMode::Training ? measure_bits::kTrainingMode : 0U);
     io_.write32(Register::MeasureControl, command);
 
     constexpr std::uint32_t kCompletionTimeoutTicks = 8;

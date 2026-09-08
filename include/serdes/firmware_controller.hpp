@@ -71,7 +71,8 @@ public:
     explicit FirmwareController(PhyDriver& phy, FirmwareConfig config = {});
 
     [[nodiscard]] BringupReport bring_up(std::uint32_t seed);
-    [[nodiscard]] HealthAction run_offline_bert_health_check(
+    // Runs an offline test-pattern measurement; it does not monitor live traffic.
+    [[nodiscard]] HealthAction check_link_health(
         std::uint32_t symbols,
         std::uint32_t seed);
     [[nodiscard]] LinkState state() const noexcept { return state_; }
@@ -80,14 +81,14 @@ public:
     }
 
 private:
-    void transition(LinkState next, BringupReport* report = nullptr);
-    [[nodiscard]] bool wait_for_pll();
-    [[nodiscard]] static int adaptation_step(double normalized_correlation) noexcept;
+    void set_state(LinkState next, BringupReport* report = nullptr);
+    [[nodiscard]] bool wait_for_pll_lock();
+    [[nodiscard]] static int dfe_tap_step(double normalized_correlation) noexcept;
 
     PhyDriver& phy_;
     FirmwareConfig config_;
     LinkState state_{LinkState::Idle};
-    std::uint32_t degraded_window_count_{0};
+    std::uint32_t consecutive_bad_windows_{0};
     Measurement last_health_measurement_{};
 };
 
