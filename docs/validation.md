@@ -1,6 +1,17 @@
 # Validation record
 
-## Current local verification — 2026-09-08
+## Visual Studio verification — 2026-09-08
+
+The working checkout was updated to the committed cleanup, preserving its local editor configuration. A fresh Release build completed with CMake 4.0.3, Ninja, MSVC 19.51.36256.0, C++20, and Python 3.12.10 on Windows. This provides a completed CMake/CTest run in addition to the earlier GCC checks below.
+
+- CTest: **3/3 test groups passed**, comprising 104 C++ checks, 5 Python tests, and 6 smoke scenarios.
+- Full regression: **75/75 scenarios passed**, with seeds 1–25 across three synthetic channels and 500,000-symbol baseline/verification windows.
+- All 75 CSV rows exactly matched the [recorded cleanup results](evidence/2026-09-08-seed-cleanup.csv).
+- The editor compilation database was generated and contained all 8 source compilation entries.
+
+The build used the Visual Studio developer environment, a fresh `build-cleanup` directory, the Ninja generator, `CMAKE_CXX_COMPILER=cl`, and `CMAKE_BUILD_TYPE=Release`. It then ran `cmake --build build-cleanup`, `ctest --test-dir build-cleanup --output-on-failure -V`, and the full regression script with `--seeds 25 --verify-symbols 500000`. No sanitizer or new remote continuous-integration result is claimed here.
+
+## GCC verification — 2026-09-08
 
 The cleanup uses a direct nonzero noise seed and clearer names. The older record below describes the previous initialization and is retained as historical evidence. Changing the seed initialization changes sampled results; it does not change the signal equations or acceptance policy.
 
