@@ -55,6 +55,8 @@ Firmware consumes block-level counters and correlations; the simulated PHY owns 
 
 The [cleanup notes](docs/cleanup-2026-09-08.md) explain the clearer names, measurement modes, and direct noise seed. The earlier validation results remain recorded separately.
 
+For a plain-language review of functions, important variables, and design tradeoffs, see the [interview code guide](docs/interview-code-guide.md).
+
 ## Build and run
 
 Requirements: CMake 3.20+, a C++20 compiler, and Python 3.10+.
