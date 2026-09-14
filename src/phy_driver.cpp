@@ -39,7 +39,7 @@ void PhyDriver::set_ctle_code(const std::uint8_t code) {
 }
 
 std::uint8_t PhyDriver::ctle_code() const {
-    return static_cast<std::uint8_t>(io_.read32(Register::CtleCode) & 0xFFU);
+    return static_cast<std::uint8_t>(io_.read32(Register::CtleCode));
 }
 
 void PhyDriver::set_dfe_tap_code(const std::size_t index, const int code) {
@@ -57,7 +57,7 @@ std::int8_t PhyDriver::dfe_tap_code(const std::size_t index) const {
     if (index >= kDfeTapCount) {
         return 0;
     }
-    const auto encoded = static_cast<std::uint8_t>(io_.read32(kDfeTapRegisters[index]) & 0xFFU);
+    const auto encoded = static_cast<std::uint8_t>(io_.read32(kDfeTapRegisters[index]));
     return std::bit_cast<std::int8_t>(encoded);
 }
 
