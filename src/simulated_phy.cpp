@@ -246,9 +246,7 @@ SimulatedPhy::SymbolObservation SimulatedPhy::step_symbol(const bool use_known_s
 
     const int error_sign = analog_error > 1.0e-12 ? 1 : (analog_error < -1.0e-12 ? -1 : 0);
     for (std::size_t tap = 0; tap < kDfeTapCount; ++tap) {
-        const int history_sign = feedback_history_[tap] > 0.0
-                                     ? 1
-                                     : (feedback_history_[tap] < 0.0 ? -1 : 0);
+        const int history_sign = static_cast<int>(feedback_history_[tap]);
         observation.correlation_signs[tap] = error_sign * history_sign;
     }
 
