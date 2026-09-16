@@ -50,11 +50,15 @@ public:
 
 void test_prbs31_signature(TestSuite& suite) {
     serdes::Prbs31 prbs{};
-    std::uint64_t signature = 0U;
+    // First 64 output bits for an all-ones seed:
+    // b[0..30] = 1; b[n+31] = b[n] XOR b[n+3].
+    // Packed MSB-first.
+    constexpr std::uint64_t kExpectedFirst64Bits = 0xFFFF'FFFE'0000'001CULL;
+    std::uint64_t first_64_bits = 0U;
     for (int bit = 0; bit < 64; ++bit) {
-        signature = (signature << 1U) | (prbs.next_bit() ? 1U : 0U);
+        first_64_bits = (first_64_bits << 1U) | (prbs.next_bit() ? 1U : 0U);
     }
-    CHECK(suite, signature == 0xFFFF'FFFE'0000'001CULL);
+    CHECK(suite, first_64_bits == kExpectedFirst64Bits);
 
     prbs.reset(0U);
     CHECK(suite, prbs.state() == serdes::Prbs31::kDefaultSeed);
