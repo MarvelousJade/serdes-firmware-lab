@@ -9,13 +9,14 @@ Working branch: `shaoyu/rework`. Faulty branch: `shaoyu/learning`.
 Use a separate worktree so your current uncommitted work stays untouched:
 
 ```sh
-git worktree add ../serdes-practice shaoyu/learning
+git worktree add --detach ../serdes-practice shaoyu/learning
 cd ../serdes-practice
-cmake -S . -B /tmp/serdes-practice-build -DCMAKE_BUILD_TYPE=Release
-cmake --build /tmp/serdes-practice-build -j 2
-/tmp/serdes-practice-build/serdes_practice health
-/tmp/serdes-practice-build/serdes_practice replay
-ctest --test-dir /tmp/serdes-practice-build --output-on-failure
+git switch -c shaoyu/practice-investigation
+cmake -S . -B /tmp/serdes-learner-build -DCMAKE_BUILD_TYPE=Release
+cmake --build /tmp/serdes-learner-build -j 2
+/tmp/serdes-learner-build/serdes_practice health
+/tmp/serdes-learner-build/serdes_practice replay
+ctest --test-dir /tmp/serdes-learner-build --output-on-failure
 ```
 
 On Windows choose your own out-of-tree build path and use the configuration's
@@ -43,7 +44,7 @@ and recovery behavior; keep a log of competing hypotheses.
 **Simulated report:** “Repeating the same seeded channel measurement sometimes
 changes metrics, especially after an odd-sized window.”
 
-**Hypothetical consequence:** unequalizer candidate comparisons or regression
+**Hypothetical consequence:** equalizer candidate comparisons or regression
 results could depend on prior activity instead of settings alone.
 
 Reproduce with `serdes_practice replay`. The fixture locks the short channel,
@@ -65,5 +66,25 @@ Do not change floating-point tolerances just to hide a state discrepancy.
   on `shaoyu/learning-solutions`; avoid opening it until you are ready.
 - Afterward, share your notes for interview stories grounded in your actual work.
 
-The instructor verified prepared fixes separately; that does not mean the learner
-has investigated or solved either exercise yet.
+## Preserved checkpoints and actual observations
+
+| Checkpoint | Ref | Actual local result |
+|---|---|---|
+| A | `fd1b707` / `shaoyu/practice-a` | 3/5 CTest groups pass; health fixture exits 1; 3 C++ assertions fail |
+| B (A+B) | `39c6df5` / `shaoyu/practice-b` / `shaoyu/learning` | 2/5 groups pass; both fixtures exit 1; 27 C++ assertions fail |
+
+Full symptom outputs are in `learning/observations.md` on the learning branch.
+Python's 12 tests and the 6 ordinary startup smoke cases pass at both faulty
+checkpoints. Targeted behavioral tests therefore matter even when startup works.
+
+Prepared solutions on `shaoyu/learning-solutions` pass all 5 Release and
+ASan/UBSan CTest groups (187 C++ checks, both fixtures, 12 Python tests, 6 smoke
+cases), plus the 75-case full regression matching the working CSV. Those are
+instructor verification results, not learner accomplishments. Your investigation,
+fixes, and interview stories remain pending.
+
+An agent-created worktree is also available at `../serdes-learning-worktree`,
+checked out on the faulty learning branch. Use a **fresh build** or rebuild after
+changing checkpoints; an old executable may still contain a prepared solution.
+The detached-worktree command above allows independent investigation without
+changing that worktree or the working implementation.

@@ -25,7 +25,7 @@ Checklist / acceptance:
 - [x] Make health evidence current and test recovery/hysteresis.
 - [x] Require consistent subprocess status and JSON in regression evidence.
 - [x] Run full matrix/sanitizers; update concise architecture/interview evidence.
-- [ ] Prepare isolated learning checkpoints and separately verified solutions.
+- [x] Prepare isolated learning checkpoints and separately verified solutions.
 
 ## Increment 1: configuration boundary
 
@@ -105,3 +105,22 @@ confidence claim beyond approximate finite-window model evidence. Measurement
 budgets are caller-selected; extremely large windows can be slow and exceed the
 model's signed correlation accumulator range. This rework does not claim to make
 arbitrary workloads production-safe.
+
+## Learning delivery
+
+The agent-created `../serdes-learning-worktree` is checked out on
+`shaoyu/learning`, not on the working branch. Checkpoints `fd1b707` (tag
+`shaoyu/practice-a`) and `39c6df5` (tag `shaoyu/practice-b`, both exercises)
+preserve reproduced symptoms and failing targeted regressions. They are
+intentionally faulty and must not be merged into the working implementation.
+
+Prepared fixes live only on `shaoyu/learning-solutions`. Both fixtures, 187 C++
+checks, 12 Python tests and 6 smoke cases pass there in Release and ASan/UBSan;
+the 75-case full matrix matches the working evidence CSV. Diagnoses/progressive
+hints are isolated from [learner instructions](debugging-exercises.md). The
+learner has not yet investigated these exercises; personal interview stories
+will be based on their eventual notes, not the instructor's example reasoning.
+
+Final preservation check compares original user-added/removed lines against the
+remaining unstaged diff. Only agent-owned hunks are committed; no pushes, stashes,
+history rewrites, or commits of the user's original modifications were performed.

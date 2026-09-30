@@ -88,4 +88,18 @@ On single-config Linux generators, omit `-C Release` and run `./build/serdes_lab
 
 The behavioral model intentionally omits continuous-time analog effects, CDR, jitter, crosstalk, PAM4, PVT variation, protocol training, and real hardware access. Synthetic profiles are test fixtures, not measured channels, and the regression is functional validation rather than compliance-grade BER testing.
 
+## Verified rework and learning
+
+The `shaoyu/rework` branch preserves the existing workflow and adds policy
+validation, current health evidence, recovery regressions, and consistent
+CLI/JSON regression checks. Local Release and ASan/UBSan runs passed 187 C++
+checks, 12 Python tests, and 6 smoke scenarios; the 75-case full regression
+matches the historical baseline. See the [rework record](docs/rework.md),
+[current verification](docs/validation.md#rework-verification--local-wsl2-run),
+and [60-second / three-minute walkthroughs](docs/rework-interview.md).
+
+Two intentionally faulty checkpoints live on `shaoyu/learning`. Start with the
+[spoiler-free exercises](docs/debugging-exercises.md); solutions are kept on a
+separate branch. These are practice scenarios, not production incidents.
+
 Built with C++20, CMake, CTest, Python, and GitHub Actions. Licensed under the [MIT License](LICENSE).
