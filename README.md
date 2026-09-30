@@ -104,7 +104,8 @@ alongside the existing checks: Release and ASan/UBSan each pass 5/5 CTest groups
 the full regression still matches the historical baseline. Fixtures are built
 only with `BUILD_TESTING` enabled.
 
-Faulty checkpoints remain on `shaoyu/learning` and the practice tags. Start with
+Faulty checkpoints remain in the practice tags; redundant learning branch labels
+have been removed. Start with
 [spoiler-free exercises](docs/debugging-exercises.md), or read the completed
 [agent investigations](docs/debugging-investigations.md) for causes and evidence.
 These are practice scenarios, not production incidents or claims about your

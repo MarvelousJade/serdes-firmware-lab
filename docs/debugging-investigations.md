@@ -15,7 +15,9 @@ Rework and solutions diverge at `aefbd7d`. Solutions contains two focused fixes:
 A `19c8e6c`, then B `0ea67cd`. Their corrected controller/model contents already
 match rework, so cherry-picking would duplicate equivalent commits and omit the
 exercise ancestry. Chosen: fast-forward main to rework, then merge solutions
-without squash. The original checkpoint tags/branches remain unchanged.
+without squash. The original checkpoint tags remain unchanged. After integration,
+redundant learning/solutions branch labels and the temporary learning worktree
+were removed; fixes remain in main and faulty versions remain in the tags.
 
 All work used separate verification/integration worktrees. The original checkout
 remains on `shaoyu/rework` with its unstaged edits untouched. Main's merge keeps

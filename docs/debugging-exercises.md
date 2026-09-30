@@ -12,11 +12,13 @@ user incidents or production measurements. Reproduction outputs on faulty
 checkpoints are actual local observations recorded separately. Do not merge a
 learning checkpoint into the working branch.
 
-Working branch: `shaoyu/rework`. Faulty branch: `shaoyu/learning`.
+Working branch: `main`. Faulty checkpoints: `shaoyu/practice-a` and
+`shaoyu/practice-b`. Historical learning/solutions branch labels were removed
+after integration; their commits remain in main's ancestry.
 Use a separate worktree so your current uncommitted work stays untouched:
 
 ```sh
-git worktree add --detach ../serdes-practice shaoyu/learning
+git worktree add --detach ../serdes-practice shaoyu/practice-b
 cd ../serdes-practice
 git switch -c shaoyu/practice-investigation
 cmake -S . -B /tmp/serdes-learner-build -DCMAKE_BUILD_TYPE=Release
@@ -44,7 +46,7 @@ Reproduce with `serdes_practice health`. The fixture brings up a short channel,
 uses two bad windows, restores one healthy window, then applies another
 disturbance. Compare the action with the policy of three consecutive bad
 windows. Checkpoint tag: `shaoyu/practice-a` (only this defect). The final learning
-branch includes this and Exercise B. Investigate observations, state transitions,
+checkpoint B includes this and Exercise B. Investigate observations, state transitions,
 and recovery behavior; keep a log of competing hypotheses.
 
 ## Exercise B — inconsistent repeated measurement
@@ -71,7 +73,7 @@ Do not change floating-point tolerances just to hide a state discrepancy.
   after each fix. Check both healthy behavior and failure/recovery paths.
 - Ask for “A hint 1” or “B hint 1” for progressive guidance. No hints are embedded
   here. Diagnosis, progressive hints, and verified solution records are kept only
-  on `shaoyu/learning-solutions`; avoid opening it until you are ready.
+  in `learning/solutions.md` on main; avoid opening it until you are ready.
 - Afterward, share your notes for interview stories grounded in your actual work.
 
 ## Preserved checkpoints and actual observations
@@ -79,20 +81,19 @@ Do not change floating-point tolerances just to hide a state discrepancy.
 | Checkpoint | Ref | Actual local result |
 |---|---|---|
 | A | `fd1b707` / `shaoyu/practice-a` | 3/5 CTest groups pass; health fixture exits 1; 3 C++ assertions fail |
-| B (A+B) | `39c6df5` / `shaoyu/practice-b` / `shaoyu/learning` | 2/5 groups pass; both fixtures exit 1; 27 C++ assertions fail |
+| B (A+B) | `39c6df5` / `shaoyu/practice-b` | 2/5 groups pass; both fixtures exit 1; 27 C++ assertions fail |
 
-Full symptom outputs are in `learning/observations.md` on the learning branch.
+Full symptom outputs are in `learning/observations.md` on main and both tags.
 Python's 12 tests and the 6 ordinary startup smoke cases pass at both faulty
 checkpoints. Targeted behavioral tests therefore matter even when startup works.
 
-Prepared solutions on `shaoyu/learning-solutions` pass all 5 Release and
+Prepared solutions, originally on `shaoyu/learning-solutions`, pass all 5 Release and
 ASan/UBSan CTest groups (187 C++ checks, both fixtures, 12 Python tests, 6 smoke
 cases), plus the 75-case full regression matching the working CSV. Those are
 instructor verification results, not learner accomplishments. Your investigation,
 fixes, and interview stories remain pending.
 
-An agent-created worktree is also available at `../serdes-learning-worktree`,
-checked out on the faulty learning branch. Use a **fresh build** or rebuild after
-changing checkpoints; an old executable may still contain a prepared solution.
-The detached-worktree command above allows independent investigation without
-changing that worktree or the working implementation.
+The temporary learning worktree was removed after integration. Use the tagged
+checkpoint command above and a **fresh build**, or rebuild after changing
+checkpoints; an old executable may still contain a prepared solution. Historical
+branch names in the observation records identify the original delivery only.
