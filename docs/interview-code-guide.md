@@ -382,7 +382,7 @@ Sources: [`serdes_tests.cpp`](../tests/serdes_tests.cpp), [`test_reference_model
 
 | Test function | What it demonstrates |
 |---|---|
-| `test_prbs31_signature` | First 64 bits match a known signature; zero seed falls back safely. `signature` packs those bits for comparison. |
+| `test_prbs31_signature` | First 64 bits match a known signature; zero seed falls back safely. `first_64_bits` packs bits MSB-first and is compared with `kExpectedFirst64Bits`; the test documents the all-ones seed recurrence. |
 | `test_register_encoding_and_clamping` | Negative taps survive encoding and out-of-range equalizer settings saturate. |
 | `test_measurement_timeout` | A never-completing backend produces an invalid result after exactly eight ticks. |
 | `test_sequence_replay` | Identical seeds reproduce all metrics across profiles/modes, including odd window lengths that exercise noise-cache reset. `first` and `repeated` are the compared snapshots. |
