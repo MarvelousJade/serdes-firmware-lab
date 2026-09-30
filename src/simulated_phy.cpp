@@ -172,8 +172,6 @@ void SimulatedPhy::restart_test_sequence(const std::uint32_t seed) {
     prbs_.reset(nonzero_seed);
     // The noise generator needs a nonzero state. Reusing this seed makes replay simple.
     noise_state_ = static_cast<std::uint64_t>(nonzero_seed);
-    cached_noise_sample_ = 0.0;
-    has_cached_noise_sample_ = false;
     symbol_history_.fill(0.0);
     feedback_history_.fill(0.0);
     previous_raw_sample_ = 0.0;
