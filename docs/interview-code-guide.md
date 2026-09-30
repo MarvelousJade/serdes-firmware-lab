@@ -4,7 +4,11 @@ A plain-language review of the project's functions, stored variables, and import
 
 ## 1. The 30-second explanation
 
-> I built an embedded-style C++ controller that brings up a simulated SERDES receiver through a register interface. It waits for clock readiness, sweeps front-end equalization, trains feedback equalization, and verifies a BER target. The simulator processes symbols; firmware only reads measurements and adjusts registers. Tests cover repeatability, saturation, timeouts, training failure, and persistent degradation. Python checks learned taps against analytical expectations.
+> This project uses an embedded-style C++ controller to bring up a simulated SERDES receiver through a register interface. It waits for clock readiness, sweeps front-end equalization, trains feedback equalization, and verifies a BER target. The simulator processes symbols; firmware only reads measurements and adjusts registers. Tests cover repeatability, saturation, timeouts, training failure, and persistent degradation. Python checks learned taps against analytical expectations.
+
+Use the [rework walkthrough](rework-interview.md) for a 60-second introduction
+and three-minute technical tour. Attribute your own work only after you have
+actually investigated, changed, and verified it.
 
 This is a **host-side behavioral prototype**, not deployed silicon firmware or proof of physical link performance.
 
@@ -91,7 +95,7 @@ Sources: [`firmware_controller.hpp`](../include/serdes/firmware_controller.hpp),
 | `maximum_ber` (`1e-3`) | Maximum accepted upper BER estimate, not just raw BER. |
 | `degraded_windows_before_retrain` (3) | Require persistent bad health windows before requesting retraining. |
 
-These defaults are policy choices, not universal SERDES requirements. Configuration is not comprehensively validated; production code would need explicit range checks.
+These defaults are policy choices, not universal SERDES requirements. Bring-up validates positive measurement/training/stability/health counts, finite deadband in [0,1], and finite BER limit in (0,1], returning `InvalidConfiguration` before I/O. A zero PLL wait budget permits only the immediate check; insufficient training budget still gives `TrainingNotConverged`. See [tradeoffs and limitations](rework.md).
 
 ### Stored state: `FirmwareController`
 
@@ -103,7 +107,7 @@ These defaults are policy choices, not universal SERDES requirements. Configurat
 | `consecutive_bad_windows_` | Consecutive health windows above the BER limit. Reset at bring-up and after a healthy window. |
 | `last_health_measurement_` | Latest measurement actually taken by `check_link_health()`; retained for inspection after the call. Overwritten, not appended. |
 
-**Subtlety:** an early health-check return (not link-up or lost PLL) does not replace `last_health_measurement_`. Bring-up does not clear it either, so it is not necessarily a fresh reading of the current link.
+**Evidence lifecycle:** bring-up and every health-check entry clear `last_health_measurement_`. A skipped check or lost PLL leaves invalid evidence, not a valid window from an earlier session. Copy historical telemetry yourself if needed.
 
 ### Functions
 
@@ -151,7 +155,7 @@ These defaults are policy choices, not universal SERDES requirements. Configurat
 | Enum | Values and meaning |
 |---|---|
 | `LinkState` | `Idle`: not started; `Reset`: initializing; `WaitForPll`: clock wait; `CtleSweep`: front-end search; `DfeTraining`: feedback adaptation; `Verify`: acceptance test; `LinkUp`: accepted; `Degraded`: persistent poor BER; `Fault`: bring-up/hardware/measurement failure. |
-| `FaultReason` | `None`, `PllTimeout`, `MeasurementFault`, `TrainingNotConverged`, `BerTargetMissed`: distinguish why bring-up returned. |
+| `FaultReason` | `None`, `PllTimeout`, `MeasurementFault`, `TrainingNotConverged`, `BerTargetMissed`, `InvalidConfiguration`: distinguish why bring-up returned. |
 | `HealthAction` | `Healthy`: pass; `Observe`: bad BER but not enough consecutive failures; `RetrainRequired`: caller should recover; `NotLinkUp`: health test was not run. |
 
 Lost PLL or invalid health measurements immediately cause `Fault` and a retrain request. BER failures use hysteresis: the first two default failing windows return `Observe`; the third changes state to `Degraded`. A healthy window clears the bad-window count.
@@ -351,7 +355,7 @@ The fixtures have main-cursor gain 1. These helpers are a matching-equation cros
 | Function / variable | Plain explanation |
 |---|---|
 | `parse_args()` | Read executable path, seed count, verification length, output directory, and profile selection. |
-| `run_case(executable, profile, seed, symbols)` | Run the C++ CLI, parse its final nonblank stdout line as JSON, record exit status, and compare learned taps to reference taps. |
+| `run_case(executable, profile, seed, symbols)` | Run the C++ CLI, parse its final nonblank stdout line as JSON, verify exit/JSON consistency and case identity/sample counts, then compare learned taps to reference taps. |
 | `write_csv(path, rows)` | Save selected per-run metrics in a reviewable table. |
 | `write_summary(path, rows)` | Save/print pass count, BER summary statistics, and worst tap mismatch. |
 | `main()` | Validate requested cases, run each profile/seed pair, write artifacts, and fail if any reported scenario fails. |
@@ -386,7 +390,9 @@ Sources: [`serdes_tests.cpp`](../tests/serdes_tests.cpp), [`test_reference_model
 | `test_bringup` | Each built-in profile brings up successfully, does not worsen measured BER, and ends at `LinkUp`. |
 | `test_pll_timeout` | Forced PLL non-lock yields `PllTimeout` and `Fault`. |
 | `test_training_exhaustion` | An insufficient window budget gives `TrainingNotConverged`. |
-| `test_degradation_hysteresis` | After a good bring-up, an injected worse channel yields two `Observe` responses then a retrain request and `Degraded`. |
+| `test_degradation_hysteresis` | Healthy windows reset failure history; three subsequent bad windows degrade; explicit retraining recovers. |
+| `test_invalid_configuration` | Invalid policy returns a fault without register writes or ticks. |
+| `test_health_evidence_lifecycle` | Bring-up, skipped checks, PLL loss, and invalid measurements never expose stale valid evidence. |
 
 Common test locals `model`, `phy`, `config`, `firmware`, and `report` build isolated scenarios. `degraded` is a deliberately worsened profile; `seeds` supplies replay edge cases.
 
@@ -429,6 +435,11 @@ Common test locals `model`, `phy`, `config`, `firmware`, and `report` build isol
 7. **Why health hysteresis?** Avoid retraining on a transient BER failure; invalid measurements and lost clock readiness still require immediate recovery.
 8. **What would production require?** Real register transport, physical timing, stronger configuration validation, asynchronous scheduling as needed, hardware error handling, and measured-channel validation.
 9. **What does this not model?** Continuous-time analog behavior, CDR, jitter, crosstalk, PAM4, PVT variation, or protocol training.
-10. **What testing would you add?** Explicit healthy-window counter-reset tests, health early-return cases, BER-target rejection, mismatched measurement counts, configuration boundaries, and actual recovery orchestration.
+10. **What testing would you add?** Broader configuration boundaries, mismatched register counters, coherent hardware result reads, and actual recovery orchestration. Healthy-window reset, health early returns, explicit retraining, and invalid-policy rejection now have regression tests.
+
+Python runner tests also cover conflicting exit/JSON outcomes, wrong case/sample
+counts, ordinary reported failures, missing output, and the matrix failure exit.
+Current local results: 187 C++ checks, 12 Python tests, 6 smoke scenarios, and
+75 full regression scenarios; see the [validation record](validation.md).
 
 For deeper detail: [architecture](architecture.md), [register contract](register-map.md), and [validation evidence](validation.md). Recheck this guide when implementation names or behavior change.

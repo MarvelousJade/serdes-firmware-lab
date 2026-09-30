@@ -24,7 +24,7 @@ Checklist / acceptance:
 - [x] Reject invalid controller policy before device I/O, retain normal bring-up.
 - [x] Make health evidence current and test recovery/hysteresis.
 - [x] Require consistent subprocess status and JSON in regression evidence.
-- [ ] Run full matrix/sanitizers; update concise architecture/interview evidence.
+- [x] Run full matrix/sanitizers; update concise architecture/interview evidence.
 - [ ] Prepare isolated learning checkpoints and separately verified solutions.
 
 ## Increment 1: configuration boundary
@@ -82,3 +82,26 @@ Tap disagreement is still reported rather than a universal pass criterion.
 The runner is for this trusted local CLI, not hardened ingestion of arbitrary
 JSON; it has no subprocess wall-clock timeout and prior artifacts are not deleted
 on failure. Use a fresh output directory when collecting evidence.
+
+## Final working-version evidence and reading order
+
+Release and ASan/UBSan Debug CTest passed all three groups: 187 C++ checks,
+12 Python tests, 6 smoke cases each. Full Release regression passed 75/75;
+all CSV rows equal the historical cleanup rows. Manual CLI confirmed success,
+insufficient-evidence failure (exit 2), and zero-length input rejection (exit 1).
+See [validation](validation.md) for toolchain, commands, measurements, and the
+non-fatal `.sframe` linker diagnostic. No remote CI/Windows run is claimed.
+
+Read the README for running the lab, [architecture](architecture.md) for the
+workflow, [rework interview preparation](rework-interview.md) for concise timed
+walkthroughs, and [learner instructions](debugging-exercises.md) for the separate
+learning branch. Historical records remain historical. The detailed code guide
+has been updated without staging the user's existing edits.
+
+Remaining limits: no real register transport, physical timing or measured
+channels, no asynchronous/RTOS integration, no automatic recovery orchestration,
+no general channel-profile validation, no runner wall-clock timeout, and no
+confidence claim beyond approximate finite-window model evidence. Measurement
+budgets are caller-selected; extremely large windows can be slow and exceed the
+model's signed correlation accumulator range. This rework does not claim to make
+arbitrary workloads production-safe.

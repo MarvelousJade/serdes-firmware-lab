@@ -2,6 +2,22 @@
 
 ## Responsibility boundary
 
+The rework keeps these boundaries and the synchronous end-to-end workflow; no
+new framework or service layer was warranted. See [rework decisions](rework.md).
+Before reset, the controller validates positive measurement/training/stability
+counts, finite deadband in [0,1], and finite BER limit in (0,1]. Invalid policy
+returns `InvalidConfiguration` without device I/O. Budget exhaustion remains a
+runtime training fault rather than being silently clamped.
+
+Health evidence is cleared at bring-up and before every health check. A skipped
+check or lost PLL therefore cannot present a previous valid window as current.
+Healthy windows reset the consecutive-failure counter; recovery is explicitly
+requested, not automatically scheduled.
+
+The Python regression boundary requires matching profile/seed, consistent JSON
+and exit status (0 success, 2 bring-up failure), and requested baseline/trained
+sample counts on success. Analytical tap differences remain diagnostic metrics.
+
 `FirmwareController` owns synchronous sequencing and policy. It resets the device, applies bounded timeouts, selects CTLE and DFE settings, checks a confidence-aware BER acceptance target, and applies hysteresis to offline PRBS/BERT health windows. It depends only on `PhyDriver` and therefore has no knowledge of the channel implementation. It is a host-side firmware algorithm prototype, not a non-blocking production RTOS task.
 
 `PhyDriver` is a typed hardware-abstraction layer over `IRegisterIo`. It masks control fields, encodes signed tap registers, starts measurement windows, polls completion, and converts fixed-point metrics. A real MMIO, SPI, or mailbox backend can replace the simulator without changing the controller.
@@ -42,7 +58,7 @@ Firmware applies a one-, two-, or three-code bounded update opposite the normali
 
 ## Control flow
 
-1. `RESET`: clear CTLE/DFE state and reset the simulated PHY.
+1. Validate policy, then `RESET`: clear CTLE/DFE state and reset the simulated PHY.
 2. `WAIT_FOR_PLL`: poll the lock bit for at most 32 deterministic ticks.
 3. Baseline: measure the unequalized channel over the configured verification length.
 4. `CTLE_SWEEP`: replay an identical seeded PRBS/noise window for all eight codes; minimize errors, using mean squared error as a tie-breaker.

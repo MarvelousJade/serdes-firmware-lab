@@ -52,6 +52,46 @@ python python/run_regression.py --executable build/serdes_lab.exe --seeds 25 --v
 
 The acceptance threshold remains an approximate 95% upper estimate at or below 1e-3. The [full CSV](evidence/2026-09-08-seed-cleanup.csv) records each scenario. These checks establish behavior inside the software model; they do not establish equal statistical quality between seed schemes, independence of noise streams, or physical hardware performance.
 
+## Rework verification — local WSL2 run
+
+This run verifies the existing project plus the changes recorded in
+[rework.md](rework.md); it does not replace the historical records above.
+Toolchain: GCC 14.2.1 (20250207), CMake 4.0.1, Python 3.14.7,
+Linux 6.18.40.1-microsoft-standard-WSL2. Release uses CMake's `-O3 -DNDEBUG`
+and the repository warning flags. No Windows or remote CI rerun is claimed.
+
+```sh
+cmake -S . -B /tmp/serdes-rework-build -DCMAKE_BUILD_TYPE=Release
+cmake --build /tmp/serdes-rework-build -j 2
+ctest --test-dir /tmp/serdes-rework-build --output-on-failure -V
+python3 python/run_regression.py --executable /tmp/serdes-rework-build/serdes_lab \
+  --seeds 25 --verify-symbols 500000 --output /tmp/serdes-rework-full
+cmake -S . -B /tmp/serdes-rework-sanitize -DCMAKE_BUILD_TYPE=Debug \
+  -DSERDES_ENABLE_SANITIZERS=ON
+cmake --build /tmp/serdes-rework-sanitize -j 2
+ctest --test-dir /tmp/serdes-rework-sanitize --output-on-failure -V
+```
+
+Actual results:
+- Release and ASan/UBSan Debug: **3/3 CTest groups pass**, 187 C++ checks,
+  12 Python tests, 6 real CLI smoke scenarios each.
+- Full Release matrix: **75/75 pass**, seeds 1–25, three synthetic profiles,
+  500,000 symbols per baseline/trained window (75 million combined decisions).
+- Zero trained errors: 54/75; median baseline BER 9.147e-2; worst trained BER
+  5.000e-5; worst approximate upper estimate 6.937e-5; worst tap difference 1.
+- [Current CSV](evidence/rework-regression.csv) equals all 75 historical cleanup
+  rows, compared as parsed dictionaries. Normal signal behavior is preserved.
+- Manual medium/seed-42 CLI: 18,164 baseline errors, zero trained errors over
+  200,000 symbols, CTLE 4, taps [12,-36,17], 17 windows, exit 0.
+- One-symbol window: zero observed errors but upper estimate 1, rejected with
+  `ber_target_missed`, exit 2. Zero-symbol input: usage rejection, exit 1.
+
+The linker emitted `error in ... Scrt1.o(.sframe); no .sframe will be created`
+while returning success. Built binaries ran, and sanitizers reported no runtime
+findings. This is a local toolchain diagnostic, not a claimed clean linker log.
+Timings are not production benchmarks. Regression fixtures and the matching
+analytical reference do not validate physical channels or silicon.
+
 ## Historical record — 2026-07-16
 
 Validated locally on 2026-07-16 with GCC 13.2.0, CMake 4.0.3, Ninja 1.11.1, and Python 3.12.10 on Windows.
