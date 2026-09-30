@@ -28,6 +28,7 @@ enum class FaultReason : std::uint8_t {
     MeasurementFault,
     TrainingNotConverged,
     BerTargetMissed,
+    InvalidConfiguration,
 };
 
 [[nodiscard]] std::string_view to_string(LinkState state) noexcept;
@@ -70,6 +71,7 @@ class FirmwareController {
 public:
     explicit FirmwareController(PhyDriver& phy, FirmwareConfig config = {});
 
+    // Invalid policy returns InvalidConfiguration without touching the device.
     [[nodiscard]] BringupReport bring_up(std::uint32_t seed);
     // Runs an offline test-pattern measurement; it does not monitor live traffic.
     [[nodiscard]] HealthAction check_link_health(

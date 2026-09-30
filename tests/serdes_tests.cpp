@@ -7,6 +7,7 @@
 #include <cmath>
 #include <cstdint>
 #include <iostream>
+#include <limits>
 #include <string_view>
 
 namespace {
@@ -42,10 +43,11 @@ public:
     [[nodiscard]] std::uint32_t read32(const serdes::Register address) const override {
         return address == serdes::Register::Status ? serdes::status_bits::kPllLocked : 0U;
     }
-    void write32(serdes::Register, std::uint32_t) override {}
+    void write32(serdes::Register, std::uint32_t) override { ++writes; }
     void tick() override { ++ticks; }
 
     std::uint32_t ticks{0};
+    std::uint32_t writes{0};
 };
 
 void test_prbs31_signature(TestSuite& suite) {
@@ -187,6 +189,33 @@ void test_pll_timeout(TestSuite& suite) {
     CHECK(suite, firmware.state() == serdes::LinkState::Fault);
 }
 
+void test_invalid_configuration(TestSuite& suite) {
+    std::array<serdes::FirmwareConfig, 12> configs{};
+    configs[0].maximum_ber = std::numeric_limits<double>::quiet_NaN();
+    configs[1].maximum_ber = std::numeric_limits<double>::infinity();
+    configs[2].maximum_ber = 0.0;
+    configs[3].maximum_ber = 1.01;
+    configs[4].correlation_deadband = std::numeric_limits<double>::quiet_NaN();
+    configs[5].correlation_deadband = -0.01;
+    configs[6].correlation_deadband = 1.01;
+    configs[7].sweep_symbols = 0U;
+    configs[8].training_symbols_per_window = 0U;
+    configs[9].verify_symbols = 0U;
+    configs[10].stable_training_windows = 0U;
+    configs[11].degraded_windows_before_retrain = 0U;
+    for (const auto& config : configs) {
+        NeverCompleteIo io{};
+        serdes::PhyDriver phy{io};
+        serdes::FirmwareController firmware{phy, config};
+        const auto report = firmware.bring_up(42U);
+        CHECK(suite, !report.success);
+        CHECK(suite, serdes::to_string(report.fault) == "invalid_configuration");
+        CHECK(suite, firmware.state() == serdes::LinkState::Fault);
+        CHECK(suite, report.state_trace_size == 1U);
+        CHECK(suite, io.writes == 0U && io.ticks == 0U);
+    }
+}
+
 void test_training_exhaustion(TestSuite& suite) {
     const auto profile = *serdes::find_channel_profile("medium");
     serdes::SimulatedPhy model{profile};
@@ -240,6 +269,7 @@ int main() {
     test_bringup(suite, "medium");
     test_bringup(suite, "long");
     test_pll_timeout(suite);
+    test_invalid_configuration(suite);
     test_training_exhaustion(suite);
     test_degradation_hysteresis(suite);
     return suite.finish();

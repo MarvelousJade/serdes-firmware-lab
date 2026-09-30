@@ -15,6 +15,17 @@ constexpr std::uint32_t kSweepSeedMask = 0x5A5A'1234U;
 constexpr std::uint32_t kTrainingSeedMask = 0x2468'ACE1U;
 constexpr std::uint32_t kVerificationSeedMask = 0x6C8E'9CF5U;
 
+bool valid_configuration(const FirmwareConfig& config) noexcept {
+    return config.sweep_symbols != 0U && config.training_symbols_per_window != 0U &&
+           config.verify_symbols != 0U && config.max_training_windows != 0U &&
+           config.stable_training_windows != 0U &&
+           config.degraded_windows_before_retrain != 0U &&
+           std::isfinite(config.correlation_deadband) &&
+           config.correlation_deadband >= 0.0 && config.correlation_deadband <= 1.0 &&
+           std::isfinite(config.maximum_ber) &&
+           config.maximum_ber > 0.0 && config.maximum_ber <= 1.0;
+}
+
 }  // namespace
 
 std::string_view to_string(const LinkState state) noexcept {
@@ -53,6 +64,8 @@ std::string_view to_string(const FaultReason reason) noexcept {
         return "training_not_converged";
     case FaultReason::BerTargetMissed:
         return "ber_target_missed";
+    case FaultReason::InvalidConfiguration:
+        return "invalid_configuration";
     }
     return "unknown";
 }
@@ -63,6 +76,11 @@ FirmwareController::FirmwareController(PhyDriver& phy, const FirmwareConfig conf
 BringupReport FirmwareController::bring_up(const std::uint32_t seed) {
     BringupReport report{};
     consecutive_bad_windows_ = 0U;
+    if (!valid_configuration(config_)) {
+        report.fault = FaultReason::InvalidConfiguration;
+        set_state(LinkState::Fault, &report);
+        return report;
+    }
 
     set_state(LinkState::Reset, &report);
     phy_.reset();
