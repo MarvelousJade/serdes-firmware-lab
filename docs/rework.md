@@ -23,7 +23,7 @@ Checklist / acceptance:
 - [x] Inspect and establish a passing baseline.
 - [x] Reject invalid controller policy before device I/O, retain normal bring-up.
 - [x] Make health evidence current and test recovery/hysteresis.
-- [ ] Require consistent subprocess status and JSON in regression evidence.
+- [x] Require consistent subprocess status and JSON in regression evidence.
 - [ ] Run full matrix/sanitizers; update concise architecture/interview evidence.
 - [ ] Prepare isolated learning checkpoints and separately verified solutions.
 
@@ -63,3 +63,22 @@ After two reset assignments, 187 C++ checks, 5 Python tests, and 6 smoke scenari
 passed. Tests also exercise bad/bad/healthy/bad/bad/bad hysteresis, a skipped check
 in Degraded, explicit retraining, lost PLL, and a zero-length health fault. No
 automatic retrain scheduler was added: the caller remains responsible for recovery.
+
+## Increment 3: trustworthy regression outcomes
+
+Problem: a JSON `success` flag alone drove pass/fail while subprocess exit status
+was only recorded. Reports could also describe the wrong case or shorter sample.
+Alternatives: trust the flag, trust only the exit code, or check both and the
+requested identity/counts. Chosen: require the existing CLI contract (0 for
+success, 2 for reported bring-up failure), matching profile/seed, and full
+baseline/trained counts on success before adding analytical comparisons.
+Normal bring-up failures remain rows for review; contradictory outcomes stop
+the run rather than producing a misleading new summary. No schema dependency.
+
+Evidence: mocked subprocess tests reproduced six failures before the fix.
+Afterward, all 12 Python tests, 187 C++ checks, and 6 real CLI smoke scenarios
+passed. Mocked tests isolate the contract; smoke tests execute the real pipeline.
+Tap disagreement is still reported rather than a universal pass criterion.
+The runner is for this trusted local CLI, not hardened ingestion of arbitrary
+JSON; it has no subprocess wall-clock timeout and prior artifacts are not deleted
+on failure. Use a fresh output directory when collecting evidence.

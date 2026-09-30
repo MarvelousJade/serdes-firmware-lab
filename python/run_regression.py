@@ -40,6 +40,18 @@ def run_case(executable: pathlib.Path, profile: str, seed: int, symbols: int) ->
     if not lines:
         raise RuntimeError(f"no JSON from {' '.join(command)}: {completed.stderr.strip()}")
     result = json.loads(lines[-1])
+    success = result.get("success")
+    if not isinstance(success, bool) or completed.returncode != (0 if success else 2):
+        raise RuntimeError(
+            f"inconsistent outcome for {profile} seed {seed}: "
+            f"success={success!r}, exit={completed.returncode}, "
+            f"stderr={completed.stderr.strip()}"
+        )
+    if result.get("profile") != profile or result.get("seed") != seed:
+        raise RuntimeError(f"result does not match requested {profile} seed {seed}")
+    if success and (result.get("baseline_symbols") != symbols or
+                    result.get("trained_symbols") != symbols):
+        raise RuntimeError(f"successful result does not contain {symbols} symbols per window")
     result["return_code"] = completed.returncode
     ideal = ideal_dfe_codes(CHANNELS[profile], result["ctle_code"])
     result["ideal_dfe_tap_codes"] = list(ideal)
