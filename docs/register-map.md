@@ -1,5 +1,7 @@
 # Synthetic PHY register map
 
+> Exact interface reference. Look up a register when needed; start with the [README](../README.md) for the project overview.
+
 All registers are 32-bit. The interface is intentionally small enough to back with MMIO, SPI, or a simulator.
 
 | Offset | Name | Access | Description |

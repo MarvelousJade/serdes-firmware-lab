@@ -1,5 +1,7 @@
 # Validation record
 
+> Evidence record. Results below retain their original dates and conditions; this is not an interview script. Start with the [README](../README.md) for the summary.
+
 ## Integrated main verification
 
 The agent reran both faulty exercises, verified existing fixes `19c8e6c` and

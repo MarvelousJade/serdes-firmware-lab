@@ -1,65 +1,26 @@
-# SERDES Firmware Adaptation Lab
+# SerDes Firmware Adaptation Lab
 
-[![CI](https://github.com/MarvelousJade/serdes-firmware-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/MarvelousJade/serdes-firmware-lab/actions/workflows/ci.yml)
-[![C++20](https://img.shields.io/badge/C%2B%2B-20-00599C.svg)](https://isocpp.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+A C++20 software prototype for starting, adjusting, and testing a simulated high-speed data receiver. SerDes means serializer/deserializer: a system that converts between parallel data and a serial stream.
 
-An embedded-style C++20 firmware prototype that brings up and monitors a behavioral NRZ SERDES PHY through a typed 32-bit register interface.
+The project explores a practical control problem: how to choose receiver settings, check the result, and report failures without waiting forever. It runs on a computer with a simulated device, not a physical chip.
 
-The controller waits for PLL lock, sweeps CTLE settings, trains a three-tap DFE, verifies a confidence-aware BER target, and requests retraining after persistent offline BERT failures. A deterministic Python reference model cross-checks tap convergence.
-
-> This is a host-side firmware and verification project, not a transistor-level model or evidence of post-silicon performance.
-
-## Engineering highlights
-
-- Explicit bring-up and recovery state machine with bounded timeouts and fault reasons
-- Hardware-abstraction layer designed for replaceable MMIO, SPI, or mailbox backends
-- Fixed-width registers, signed tap encoding, saturation, and deterministic seeded replay
-- PRBS31 traffic, synthetic channel/noise profiles, CTLE sweep, DFE adaptation, and BER estimation
-- Cross-platform CI, 104 C++ checks, Python reference tests, and multi-seed regression
-
-## Measured results
-
-The [2026-09-08 regression data](docs/evidence/2026-09-08-seed-cleanup.csv) covers 75 deterministic runs across three synthetic channels and 25 seeds, using 500,000-symbol baseline and trained verification windows.
-
-| Channel | Passing runs | Median baseline BER | Maximum trained BER | Maximum tap error |
-|---|---:|---:|---:|---:|
-| Short | 25/25 | 0 observed | 0 observed | 0 codes |
-| Medium | 25/25 | `9.147e-02` | 0 observed | 0 codes |
-| Long | 25/25 | `2.001e-01` | `5.000e-05` | 1 code |
-
-All 75 runs met the configured `1e-3` BER acceptance target. The worst approximate one-sided 95% upper estimate was `6.937e-5`; zero-error windows use the rule-of-three estimate rather than claiming true BER is zero. See [the validation record](docs/validation.md) for the full methodology and limitations.
-
-## Design
-
-```mermaid
-flowchart LR
-    FW[FirmwareController<br/>sequencing and health policy]
-    HAL[PhyDriver<br/>typed register HAL]
-    REG[IRegisterIo<br/>32-bit register contract]
-    PHY[SimulatedPhy<br/>PRBS, channel, CTLE, DFE, BER]
-    PY[Python reference<br/>and regression]
-
-    FW --> HAL --> REG --> PHY
-    PY --> FW
-    PY -. tap cross-check .-> PHY
-```
+## How it works
 
 ```text
-RESET -> WAIT_FOR_PLL -> CTLE_SWEEP -> DFE_TRAINING -> VERIFY -> LINK_UP
-                                                                  |
-                   retrain request <- DEGRADED <- persistent BERT failures
+Application -> Controller -> Driver -> Register interface -> Simulated device
 ```
 
-Firmware consumes block-level counters and correlations; the simulated PHY owns symbol processing. This keeps the controller realistic about the firmware/hardware boundary. See [architecture](docs/architecture.md) and the [register map](docs/register-map.md) for details.
+- **Controller:** decides which startup step to run and whether the result is acceptable.
+- **Driver:** turns operations such as reset and measure into register reads and writes. Registers are device-facing locations for commands, settings, and status.
+- **Simulated device:** models the signal and receiver, then exposes measurement results through those registers.
 
-The [cleanup notes](docs/cleanup-2026-09-08.md) explain the clearer names, measurement modes, and direct noise seed. The earlier validation results remain recorded separately.
+A successful startup resets the receiver, waits for clock readiness, compares receiver settings, trains correction settings, and checks the received data. A failed wait or measurement returns a failure instead of hanging. Separate health checks can request retraining; they do not perform it automatically.
 
-For a plain-language review of functions, important variables, and design tradeoffs, see the [interview code guide](docs/interview-code-guide.md).
+The register interface is replaceable. The implemented device backend is the simulator; production hardware transport drivers have not been built.
 
 ## Build and run
 
-Requirements: CMake 3.20+, a C++20 compiler, and Python 3.10+.
+Requirements: CMake 3.20+, a C++20 compiler, and Python 3.10+ for the Python tests and regression scripts.
 
 ```powershell
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
@@ -67,26 +28,39 @@ cmake --build build --config Release
 ctest --test-dir build -C Release --output-on-failure
 ```
 
-Run a channel scenario:
+Run one scenario with a single-configuration Windows build:
 
 ```powershell
 ./build/serdes_lab.exe --profile medium --seed 42
 ```
 
-Reproduce the 75-run regression:
+With a Visual Studio multi-configuration build, use `./build/Release/serdes_lab.exe`. On Linux, use `./build/serdes_lab`; `-C Release` is unnecessary for a single-configuration generator.
+
+To repeat the full set of scenarios, substitute your executable path if needed:
 
 ```powershell
-python python/run_regression.py `
-  --executable build/serdes_lab.exe `
-  --seeds 25 `
-  --verify-symbols 500000
+python python/run_regression.py --executable build/serdes_lab.exe --seeds 25 --verify-symbols 500000
 ```
 
-On single-config Linux generators, omit `-C Release` and run `./build/serdes_lab`.
+## Recorded evidence and limits
 
-## Scope
+The September 8, 2026 local validation record reports **104 C++ checks, 5 Python tests, 6 smoke scenarios, and 75 full regression scenarios passing**. These are recorded results, not a claim that tests were rerun for this documentation update. Compiler details, measurements, earlier results, and reproduction commands are in the [validation record](docs/validation.md).
 
-The behavioral model intentionally omits continuous-time analog effects, CDR, jitter, crosstalk, PAM4, PVT variation, protocol training, and real hardware access. Synthetic profiles are test fixtures, not measured channels, and the regression is functional validation rather than compliance-grade BER testing.
+Tests cover behavior inside a simplified software model. Synthetic channels are test fixtures, not measured hardware. An error-free sample does not establish a zero underlying error rate. The model does not establish electrical performance, physical timing, or compliance with a hardware standard.
+
+## Documentation
+
+Start with this README. For detailed learning, use the [interview code guide](docs/interview-code-guide.md). Describe your own contribution accurately; a document is supporting material, not a script to recite.
+
+| Reference | Open it when you need... |
+|---|---|
+| [Architecture](docs/architecture.md) | Receiver equations, control stages, or repeatability details |
+| [Register map](docs/register-map.md) | Exact register addresses, fields, and access rules |
+| [Validation](docs/validation.md) | Recorded test results, measurement conditions, or limitations |
+| [Interview code guide](docs/interview-code-guide.md) | Detailed explanations of functions, variables, design tradeoffs, and questions to practise |
+| [September 8 cleanup history](docs/cleanup-2026-09-08.md) | Earlier names and the seed-initialization change |
+
+These references support deeper questions; they are not a required presentation order.
 
 ## Verified rework and learning
 
@@ -111,4 +85,4 @@ have been removed. Start with
 These are practice scenarios, not production incidents or claims about your
 personal debugging experience.
 
-Built with C++20, CMake, CTest, Python, and GitHub Actions. Licensed under the [MIT License](LICENSE).
+Licensed under the [MIT License](LICENSE).
