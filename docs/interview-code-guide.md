@@ -424,7 +424,31 @@ Common test locals `model`, `phy`, `config`, `firmware`, and `report` build isol
 | `static_cast` | Make numeric conversions explicit; cast before division to avoid integer truncation. |
 | `volatile` | Not needed for the current software backend. A future MMIO backend may require volatile accesses/platform accessors; volatile alone does not provide atomicity, thread synchronization, or hardware barriers. |
 
-## 11. Questions to rehearse
+## 11. Completed debugging exercises (agent work)
+
+These were deliberately injected practice defects, not production incidents.
+The agent reproduced and verified them; do not claim you personally investigated
+them unless you do so yourself. Full commands and before/after evidence are in
+[agent investigations](debugging-investigations.md).
+
+- **Consecutive state:** bad/bad/healthy/bad incorrectly requested recovery because
+  a healthy window did not reset the stored failure count. Fix `19c8e6c` restores
+  that reset. The six-window fixture and existing hysteresis regression verify
+  that only three consecutive bad windows degrade the link. Raising a threshold
+  would change policy rather than fix state consistency.
+- **Deterministic replay:** the same seed was insufficient when the Gaussian
+  generator retained a cached second sample from an odd window. Fix `0ea67cd`
+  clears its value/validity on restart, preserving taps and PLL readiness.
+  Full-field measurement equality passes again; checking only zero bit errors
+  would miss differing MSE/margin. Removing caching is possible but unnecessary.
+
+Follow-ups: Why is a healthy window a counter boundary? What explains NotLinkUp
+following early recovery? Which random-generator state survives an odd window?
+Why is clearing a value without its validity flag insufficient? Why should a
+sequence restart preserve receiver settings? What can exact local replay prove,
+and what does it not establish about cross-platform math or physical hardware?
+
+## 12. Questions to rehearse
 
 1. **Why separate controller, driver, and simulator?** Policy stays testable without depending on symbol processing or a specific register transport.
 2. **Why CTLE before DFE?** A small eight-code sweep cheaply chooses a front-end starting point, then feedback taps adapt. This staged approach is not a joint global optimizer.

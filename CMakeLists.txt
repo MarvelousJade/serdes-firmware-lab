@@ -45,10 +45,17 @@ serdes_enable_warnings(serdes_lab)
 
 include(CTest)
 if(BUILD_TESTING)
+    # Behavioral regressions retained from the debugging exercises.
+    add_executable(serdes_practice learning/probe.cpp)
+    target_link_libraries(serdes_practice PRIVATE serdes_behavioral_model)
+    serdes_enable_warnings(serdes_practice)
+
     add_executable(serdes_tests tests/serdes_tests.cpp)
     target_link_libraries(serdes_tests PRIVATE serdes_behavioral_model)
     serdes_enable_warnings(serdes_tests)
     add_test(NAME serdes_cpp_tests COMMAND serdes_tests)
+    add_test(NAME practice_health COMMAND serdes_practice health)
+    add_test(NAME practice_replay COMMAND serdes_practice replay)
 
     find_package(Python3 COMPONENTS Interpreter QUIET)
     if(Python3_Interpreter_FOUND)

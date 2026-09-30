@@ -1,5 +1,23 @@
 # Validation record
 
+## Integrated main verification
+
+The agent reran both faulty exercises, verified existing fixes `19c8e6c` and
+`0ea67cd`, and integrated their ancestry plus rework into main without squash.
+Release and ASan/UBSan Debug each pass **5/5 CTest groups**: 187 C++ checks,
+both targeted fixtures, 12 Python tests, and 6 real CLI smoke cases. Direct C++
+and Python checks also pass. Full Release regression passes **75/75** and all
+parsed rows equal the recorded rework CSV. `BUILD_TESTING=OFF` builds/runs the
+CLI without the fixture executable.
+
+Commands, toolchain, actual before/after outputs, raw test logs, alternatives,
+and remaining limitations are in [agent investigations](debugging-investigations.md).
+These are local synthetic model results, not user accomplishments or production
+incidents. No Windows/MSVC or remote CI rerun is claimed. The non-fatal `.sframe`
+linker diagnostic remains documented; no sanitizer runtime findings occurred.
+
+## Earlier validation records
+
 ## Visual Studio verification — 2026-09-08
 
 The working checkout was updated to the committed cleanup, preserving its local editor configuration. A fresh Release build completed with CMake 4.0.3, Ninja, MSVC 19.51.36256.0, C++20, and Python 3.12.10 on Windows. This provides a completed CMake/CTest run in addition to the earlier GCC checks below.

@@ -18,8 +18,9 @@ It added policy validation, fresh health-result semantics, recovery tests, and
 checks that the Python regression runner's JSON agrees with process status and
 requested samples. Local Release and sanitizer tests passed, as did 75 synthetic
 scenarios whose outputs match the earlier baseline. This is a synchronous host
-prototype, not calibrated silicon firmware. Learning exercises are separate from
-the working branch.
+prototype, not calibrated silicon firmware. Faulty learning checkpoints remain
+separate; corrected fixtures and the individual fix commits are now integrated
+into main.
 
 ## Three-minute technical walkthrough
 
@@ -52,7 +53,25 @@ telemetry for this scope. Explain exit/JSON agreement in the Python runner. Stat
 limits: synthetic channel, matching-equation reference, synchronous execution,
 no physical timing/transport/PVT validation. See `rework.md` for alternatives.
 
-## After you investigate the exercises
+## Completed agent investigations — concise explanations
+
+**State consistency:** the practice link requested recovery after non-consecutive
+failures. The agent traced the six-window fixture and healthy return path: the
+counter was retained across recovery. Restoring its reset implements the existing
+policy without raising thresholds. Fix `19c8e6c` passes the health fixture while
+the independent replay defect remains observable.
+
+**Cached random state:** same-seed odd windows produced different metrics with
+zero bit errors. Inspection showed that restart reset the PRNG but not the cached
+second Gaussian sample. Fix `0ea67cd` invalidates that cache; exact full-field
+replay and all five integrated test groups pass. Comparing only BER or loosening
+float tolerances would hide the problem.
+
+These are explanations of actual **agent** work on intentionally faulty
+checkpoints, not personal experience stories for the user. Commands, alternatives
+and measured evidence are in [investigations](debugging-investigations.md).
+
+## If you investigate the exercises yourself
 
 Keep notes containing:
 1. Observed symptom and exact checkpoint/command.

@@ -1,5 +1,12 @@
 # Rework record
 
+Integration update: main now includes the verified rework and the corrected
+learning history without squashing, retaining fixes `19c8e6c` and `0ea67cd`.
+The earlier delivery sections below describe their original branch separation.
+See [agent investigations](debugging-investigations.md) for new reproduced
+before/after evidence and integrated-main verification. The user's personal
+exercise experience remains unclaimed.
+
 This is maintenance of an existing project, not an original-development history.
 Branch: `shaoyu/rework`, starting at `37f837f`. Existing uncommitted README,
 reference-document, editor, and driver line-ending changes are user-owned and

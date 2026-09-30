@@ -98,8 +98,16 @@ matches the historical baseline. See the [rework record](docs/rework.md),
 [current verification](docs/validation.md#rework-verification--local-wsl2-run),
 and [60-second / three-minute walkthroughs](docs/rework-interview.md).
 
-Two intentionally faulty checkpoints live on `shaoyu/learning`. Start with the
-[spoiler-free exercises](docs/debugging-exercises.md); solutions are kept on a
-separate branch. These are practice scenarios, not production incidents.
+Main now also contains the corrected learning history and individual fixes
+`19c8e6c` and `0ea67cd`, integrated without squash. Both targeted fixtures pass
+alongside the existing checks: Release and ASan/UBSan each pass 5/5 CTest groups;
+the full regression still matches the historical baseline. Fixtures are built
+only with `BUILD_TESTING` enabled.
+
+Faulty checkpoints remain on `shaoyu/learning` and the practice tags. Start with
+[spoiler-free exercises](docs/debugging-exercises.md), or read the completed
+[agent investigations](docs/debugging-investigations.md) for causes and evidence.
+These are practice scenarios, not production incidents or claims about your
+personal debugging experience.
 
 Built with C++20, CMake, CTest, Python, and GitHub Actions. Licensed under the [MIT License](LICENSE).

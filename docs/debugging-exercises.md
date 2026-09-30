@@ -1,5 +1,12 @@
 # Debugging practice (learner instructions — no solutions)
 
+Integration update: the agent has completed both investigations and integrated
+existing fixes `19c8e6c` and `0ea67cd` into `main` without squashing. Faulty tags
+remain reproducible; the fixture also runs as a passing regression on main when
+`BUILD_TESTING` is enabled. This document keeps learner instructions spoiler-free;
+open [agent investigations](debugging-investigations.md) or `learning/solutions.md`
+only when ready. The investigations are not the user's personal experience.
+
 All reports and consequences below are **invented practice material**, not real
 user incidents or production measurements. Reproduction outputs on faulty
 checkpoints are actual local observations recorded separately. Do not merge a
@@ -20,9 +27,10 @@ ctest --test-dir /tmp/serdes-learner-build --output-on-failure
 ```
 
 On Windows choose your own out-of-tree build path and use the configuration's
-`.exe` path. `serdes_practice` is a learning-only executable, not a production CLI
-feature. The branch intentionally fails selected checks. Both exercises also
-have existing C++ regression coverage; do not weaken assertions to make it pass.
+`.exe` path. `serdes_practice` is a regression-fixture executable, not a production
+CLI feature; on main it is built only with `BUILD_TESTING` enabled. The learning
+branch intentionally fails selected checks. Both exercises also have existing
+C++ regression coverage; do not weaken assertions to make it pass.
 
 ## Exercise A — intermittent recovery requests
 

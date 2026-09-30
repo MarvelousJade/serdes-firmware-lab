@@ -1,0 +1,72 @@
+UpdateCTestConfiguration  from :/tmp/serdes-exercise-check/DartConfiguration.tcl
+Parse Config file:/tmp/serdes-exercise-check/DartConfiguration.tcl
+Test project /tmp/serdes-exercise-check
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 1
+    Start 1: serdes_cpp_tests
+
+1: Test command: /tmp/serdes-exercise-check/serdes_tests
+1: Working Directory: /tmp/serdes-exercise-check
+1: Test timeout computed to be: 1500
+1: PASS: 187 checks
+1/5 Test #1: serdes_cpp_tests .................   Passed    0.19 sec
+test 2
+    Start 2: practice_health
+
+2: Test command: /tmp/serdes-exercise-check/serdes_practice "health"
+2: Working Directory: /tmp/serdes-exercise-check
+2: Test timeout computed to be: 1500
+2: window 1: expected Observe, observed Observe
+2: window 2: expected Observe, observed Observe
+2: window 3: expected Healthy, observed Healthy
+2: window 4: expected Observe, observed Observe
+2: window 5: expected Observe, observed Observe
+2: window 6: expected RetrainRequired, observed RetrainRequired
+2/5 Test #2: practice_health ..................   Passed    0.04 sec
+test 3
+    Start 3: practice_replay
+
+3: Test command: /tmp/serdes-exercise-check/serdes_practice "replay"
+3: Working Directory: /tmp/serdes-exercise-check
+3: Test timeout computed to be: 1500
+3: first: valid=1, symbols=1025, errors=0, mse=0.0733642578125, margin=0.988052368164
+3: repeat: valid=1, symbols=1025, errors=0, mse=0.0733642578125, margin=0.988052368164
+3: identical measurements: yes
+3/5 Test #3: practice_replay ..................   Passed    0.00 sec
+test 4
+    Start 4: serdes_python_tests
+
+4: Test command: /usr/sbin/python3.14 "-m" "unittest" "discover" "-s" "/mnt/g/C++ PROJECTS/serdes-exercise-verification/python/tests" "-p" "test_*.py"
+4: Working Directory: /tmp/serdes-exercise-check
+4: Test timeout computed to be: 1500
+4: ............
+4: ----------------------------------------------------------------------
+4: Ran 12 tests in 0.004s
+4:
+4: OK
+4/5 Test #4: serdes_python_tests ..............   Passed    0.46 sec
+test 5
+    Start 5: serdes_regression_smoke
+
+5: Test command: /usr/sbin/python3.14 "/mnt/g/C++ PROJECTS/serdes-exercise-verification/python/run_regression.py" "--executable" "/tmp/serdes-exercise-check/serdes_lab" "--seeds" "2" "--verify-symbols" "50000" "--output" "/tmp/serdes-exercise-check/regression-smoke"
+5: Working Directory: /tmp/serdes-exercise-check
+5: Test timeout computed to be: 1500
+5: # Regression summary
+5:
+5: - Passing scenarios: 6/6 (100.0%)
+5: - Trained windows with zero observed errors: 6/6
+5: - Median baseline BER: 9.019e-02
+5: - Worst observed trained BER: 0.000e+00
+5: - Worst approximate one-sided 95% BER upper estimate: 6.000e-05
+5: - Worst learned-to-reference tap-code difference: 1
+5: - Symbols checked per baseline/trained window: 50,000
+5/5 Test #5: serdes_regression_smoke ..........   Passed    0.32 sec
+
+100% tests passed, 0 tests failed out of 5
+
+Total Test time (real) =   1.02 sec

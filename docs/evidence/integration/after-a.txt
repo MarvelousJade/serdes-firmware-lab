@@ -1,0 +1,50 @@
+Test project /tmp/serdes-exercise-check
+    Start 1: serdes_cpp_tests
+1/5 Test #1: serdes_cpp_tests .................***Failed    0.19 sec
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL: 24 of 187 checks
+
+    Start 2: practice_health
+2/5 Test #2: practice_health ..................   Passed    0.04 sec
+    Start 3: practice_replay
+3/5 Test #3: practice_replay ..................***Failed    0.00 sec
+first: valid=1, symbols=1025, errors=0, mse=0.0733642578125, margin=0.988052368164
+repeat: valid=1, symbols=1025, errors=0, mse=0.0772094726562, margin=0.982009887695
+identical measurements: no
+
+    Start 4: serdes_python_tests
+4/5 Test #4: serdes_python_tests ..............   Passed    0.43 sec
+    Start 5: serdes_regression_smoke
+5/5 Test #5: serdes_regression_smoke ..........   Passed    0.33 sec
+
+60% tests passed, 2 tests failed out of 5
+
+Total Test time (real) =   1.00 sec
+
+The following tests FAILED:
+	  1 - serdes_cpp_tests (Failed)
+	  3 - practice_replay (Failed)
+Errors while running CTest

@@ -1,0 +1,61 @@
+Test project /tmp/serdes-exercise-check
+    Start 1: serdes_cpp_tests
+1/5 Test #1: serdes_cpp_tests .................***Failed    0.18 sec
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 123: same_measurement(first, repeated)
+FAIL line 288: firmware.check_link_health(30'000U, 103U) == serdes::HealthAction::Observe
+FAIL line 290: firmware.check_link_health(30'000U, 104U) == serdes::HealthAction::Observe
+FAIL line 292: firmware.check_link_health(30'000U, 105U) == serdes::HealthAction::RetrainRequired
+FAIL: 27 of 187 checks
+
+    Start 2: practice_health
+2/5 Test #2: practice_health ..................***Failed    0.04 sec
+window 1: expected Observe, observed Observe
+window 2: expected Observe, observed Observe
+window 3: expected Healthy, observed Healthy
+window 4: expected Observe, observed RetrainRequired
+window 5: expected Observe, observed NotLinkUp
+window 6: expected RetrainRequired, observed NotLinkUp
+
+    Start 3: practice_replay
+3/5 Test #3: practice_replay ..................***Failed    0.00 sec
+first: valid=1, symbols=1025, errors=0, mse=0.0733642578125, margin=0.988052368164
+repeat: valid=1, symbols=1025, errors=0, mse=0.0772094726562, margin=0.982009887695
+identical measurements: no
+
+    Start 4: serdes_python_tests
+4/5 Test #4: serdes_python_tests ..............   Passed    0.53 sec
+    Start 5: serdes_regression_smoke
+5/5 Test #5: serdes_regression_smoke ..........   Passed    0.31 sec
+
+40% tests passed, 3 tests failed out of 5
+
+Total Test time (real) =   1.06 sec
+
+The following tests FAILED:
+	  1 - serdes_cpp_tests (Failed)
+	  2 - practice_health (Failed)
+	  3 - practice_replay (Failed)
+Errors while running CTest
