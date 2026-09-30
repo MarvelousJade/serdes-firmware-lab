@@ -75,6 +75,7 @@ FirmwareController::FirmwareController(PhyDriver& phy, const FirmwareConfig conf
 
 BringupReport FirmwareController::bring_up(const std::uint32_t seed) {
     BringupReport report{};
+    last_health_measurement_ = {};
     consecutive_bad_windows_ = 0U;
     if (!valid_configuration(config_)) {
         report.fault = FaultReason::InvalidConfiguration;
@@ -198,6 +199,7 @@ BringupReport FirmwareController::bring_up(const std::uint32_t seed) {
 HealthAction FirmwareController::check_link_health(
     const std::uint32_t symbols,
     const std::uint32_t seed) {
+    last_health_measurement_ = {};
     if (state_ != LinkState::LinkUp) {
         return HealthAction::NotLinkUp;
     }

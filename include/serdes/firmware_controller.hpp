@@ -78,6 +78,7 @@ public:
         std::uint32_t symbols,
         std::uint32_t seed);
     [[nodiscard]] LinkState state() const noexcept { return state_; }
+    // Evidence for the latest check only; invalid after bring-up or a skipped check.
     [[nodiscard]] const Measurement& last_health_measurement() const noexcept {
         return last_health_measurement_;
     }

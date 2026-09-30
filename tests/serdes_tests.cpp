@@ -231,6 +231,36 @@ void test_training_exhaustion(TestSuite& suite) {
     CHECK(suite, firmware.state() == serdes::LinkState::Fault);
 }
 
+void test_health_evidence_lifecycle(TestSuite& suite) {
+    serdes::SimulatedPhy model{*serdes::find_channel_profile("short")};
+    serdes::PhyDriver phy{model};
+    serdes::FirmwareController firmware{phy};
+    CHECK(suite, firmware.check_link_health(30'000U, 1U) ==
+                     serdes::HealthAction::NotLinkUp);
+    CHECK(suite, !firmware.last_health_measurement().valid);
+    CHECK(suite, firmware.bring_up(42U).success);
+    CHECK(suite, firmware.check_link_health(30'000U, 1U) ==
+                     serdes::HealthAction::Healthy);
+    CHECK(suite, firmware.last_health_measurement().valid);
+    CHECK(suite, firmware.bring_up(42U).success);
+    CHECK(suite, !firmware.last_health_measurement().valid);
+    CHECK(suite, firmware.check_link_health(30'000U, 1U) ==
+                     serdes::HealthAction::Healthy);
+    // External reset removes PLL readiness without changing controller state.
+    phy.reset();
+    CHECK(suite, firmware.check_link_health(30'000U, 1U) ==
+                     serdes::HealthAction::RetrainRequired);
+    CHECK(suite, !firmware.last_health_measurement().valid);
+    CHECK(suite, firmware.state() == serdes::LinkState::Fault);
+    CHECK(suite, firmware.check_link_health(30'000U, 1U) ==
+                     serdes::HealthAction::NotLinkUp);
+    CHECK(suite, !firmware.last_health_measurement().valid);
+    CHECK(suite, firmware.bring_up(42U).success);
+    CHECK(suite, firmware.check_link_health(0U, 1U) ==
+                     serdes::HealthAction::RetrainRequired);
+    CHECK(suite, !firmware.last_health_measurement().valid);
+}
+
 void test_degradation_hysteresis(TestSuite& suite) {
     const auto short_profile = *serdes::find_channel_profile("short");
     serdes::SimulatedPhy model{short_profile};
@@ -251,9 +281,24 @@ void test_degradation_hysteresis(TestSuite& suite) {
                      serdes::HealthAction::Observe);
     CHECK(suite, firmware.check_link_health(30'000U, 101U) ==
                      serdes::HealthAction::Observe);
+    model.set_channel_profile(short_profile);
     CHECK(suite, firmware.check_link_health(30'000U, 102U) ==
+                     serdes::HealthAction::Healthy);
+    model.set_channel_profile(degraded);
+    CHECK(suite, firmware.check_link_health(30'000U, 103U) ==
+                     serdes::HealthAction::Observe);
+    CHECK(suite, firmware.check_link_health(30'000U, 104U) ==
+                     serdes::HealthAction::Observe);
+    CHECK(suite, firmware.check_link_health(30'000U, 105U) ==
                      serdes::HealthAction::RetrainRequired);
     CHECK(suite, firmware.state() == serdes::LinkState::Degraded);
+    CHECK(suite, firmware.check_link_health(30'000U, 106U) ==
+                     serdes::HealthAction::NotLinkUp);
+    CHECK(suite, !firmware.last_health_measurement().valid);
+    model.set_channel_profile(short_profile);
+    CHECK(suite, firmware.bring_up(99U).success);
+    CHECK(suite, firmware.check_link_health(30'000U, 107U) ==
+                     serdes::HealthAction::Healthy);
 }
 
 }  // namespace
@@ -271,6 +316,7 @@ int main() {
     test_pll_timeout(suite);
     test_invalid_configuration(suite);
     test_training_exhaustion(suite);
+    test_health_evidence_lifecycle(suite);
     test_degradation_hysteresis(suite);
     return suite.finish();
 }
