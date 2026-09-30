@@ -1,5 +1,7 @@
 # Architecture
 
+> Technical reference for equations and design details. For a short overview, start with the [README](../README.md). For detailed learning, use the [interview code guide](interview-code-guide.md).
+
 ## Responsibility boundary
 
 The rework keeps these boundaries and the synchronous end-to-end workflow; no

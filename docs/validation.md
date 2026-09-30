@@ -1,5 +1,7 @@
 # Validation record
 
+> Evidence record. Results below retain their original dates and conditions; this is not an interview script. Start with the [README](../README.md) for the summary.
+
 ## Visual Studio verification — 2026-09-08
 
 The working checkout was updated to the committed cleanup, preserving its local editor configuration. A fresh Release build completed with CMake 4.0.3, Ninja, MSVC 19.51.36256.0, C++20, and Python 3.12.10 on Windows. This provides a completed CMake/CTest run in addition to the earlier GCC checks below.
