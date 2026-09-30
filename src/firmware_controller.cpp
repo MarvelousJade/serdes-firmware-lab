@@ -217,7 +217,6 @@ HealthAction FirmwareController::check_link_health(
     }
 
     if (ber_upper_bound_95(last_health_measurement_) <= config_.maximum_ber) {
-        consecutive_bad_windows_ = 0U;
         return HealthAction::Healthy;
     }
 
