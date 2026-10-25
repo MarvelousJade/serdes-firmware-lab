@@ -1,0 +1,22 @@
+{
+  "reviewedAtUtc": "2026-10-25T22:51:27.905Z",
+  "reviewedSourceCommit": "ad2e8b92b0e2c2d53e55039781427b0c5dc76d84",
+  "baselineMeaning": "Review commit only; historical experiment revisions are unknown unless explicitly recorded in the linked source.",
+  "files": [
+    {
+      "path": "docs/validation.md",
+      "bytes": 10601,
+      "sha256": "d81c66f8c38488b47d97731b9d712c6f670253fa1bc6deb891595cb622826841"
+    },
+    {
+      "path": "docs/evidence/rework-regression.csv",
+      "bytes": 7505,
+      "sha256": "cc1f02c78ff5cd71a01d6404d9b573cbd2978f07e91694d911f4b440980c80ab"
+    },
+    {
+      "path": "python/run_regression.py",
+      "bytes": 5045,
+      "sha256": "ce0baab4ee3e4965b35f0ea480e38e6ba6fd27e4b11bcf8de3f7de1f7ed6c141"
+    }
+  ]
+}

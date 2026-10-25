@@ -102,3 +102,7 @@ Include follow-up questions that test my understanding of the stack and the alte
 Finish the agreed scope, run required checks, inspect the final diff, and commit verified agent-owned changes. Explain anything unfinished or unverified.
 
 The result should be a working project with focused commits, reproducible evidence, and engineering decisions I can understand and discuss confidently.
+
+## Measure results and record resume evidence
+
+Before implementing changes, read [docs/impact-and-resume-evidence.md](docs/impact-and-resume-evidence.md). Plan meaningful metrics and baseline/correctness checks before changing behavior; retain exact revisions, environment, workload, procedure and all raw results. Keep engineering, workflow and actual business impact separate. Update that evidence document with supported outcomes, contribution scope, limitations and verified/preliminary/unverified draft claims. Never invent numbers or convert synthetic benchmarks into real-user savings. Update an actual resume only when requested under its current instructions.
